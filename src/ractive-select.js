@@ -34,7 +34,7 @@ module.exports = Ractive.extend({
 
         self.observe('open', function(open) {
 
-            if(open) 
+            if(open)
                 document.addEventListener('click', self.clickHandler);
             else
                 document.removeEventListener('click', self.clickHandler);
@@ -63,8 +63,8 @@ module.exports = Ractive.extend({
 
         if(options && options.length > 0) {
 
-            for(var opt in options) {
-                opt = options[opt];
+            for(var i = 0, len = options.length; i < len; i++) {
+                var opt = options[i];
                 var attr = opt.getAttribute('value');
                 if(attr == value) {
                     label = opt.textContent;
