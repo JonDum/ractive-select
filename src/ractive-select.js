@@ -13,6 +13,10 @@ module.exports = Ractive.extend({
         }
     },
 
+    onrender: function() {
+        this.updateItems();
+    },
+
     oncomplete: function() {
 
         var self = this;
@@ -52,6 +56,25 @@ module.exports = Ractive.extend({
     },
 
     updateItems: function() {
+
+        var options = this.find('.dropdown').querySelectorAll('option');
+        var value = this.get('value');
+        var attr, label;
+
+        if(options && options.length > 0) {
+
+            for(var opt in options) {
+                opt = options[opt];
+                var attr = opt.getAttribute('value');
+                if(attr == value) {
+                    label = opt.textContent;
+                    break;
+                }
+            }
+
+        }
+
+        this.set('label', label);
 
     },
 
