@@ -6,13 +6,12 @@
 
     <div class='arrows'></div>
 
-    {{#if open}}
-    <div class='dropdown' on-click='select(event)'>
+    <div class='dropdown{{#if open}} open{{/if}}' on-click='select(event)'>
         {{#if items}}
             {{> content}}
         {{else}}
             {{yield}}
         {{/if}}
     </div>
-    {{/if}}
+
 </div>
