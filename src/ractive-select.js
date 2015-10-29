@@ -5,6 +5,8 @@ module.exports = Ractive.extend({
 
     template: require('./template.html'),
 
+    isolated: true,
+
     data: function() {
         return {
 
@@ -26,9 +28,9 @@ module.exports = Ractive.extend({
         self.clickHandler = function(e) {
 
             if(container.contains(e.target))
-               return;
+                return;
 
-           self.set('open', false);
+            self.set('open', false);
 
         };
 
@@ -45,6 +47,10 @@ module.exports = Ractive.extend({
 
             this.updateItems();
 
+        }, {defer: true});
+
+        self.observe('content partial', function(value, keypath) {
+            console.log('observe: content ', arguments);
         });
 
     },
@@ -57,28 +63,50 @@ module.exports = Ractive.extend({
 
     updateItems: function() {
 
-        var options = this.find('.dropdown').querySelectorAll('option');
+        var select = this.find('select');
+        var options = select.querySelectorAll('option');
         var value = this.get('value');
         var attr, label;
+
+        var items = this.get('items');
+
+        var newItems = [];
 
         if(options && options.length > 0) {
 
             for(var i = 0, len = options.length; i < len; i++) {
                 var opt = options[i];
-                var attr = opt.getAttribute('value');
+                attr = opt.getAttribute('value');
                 if(attr == value) {
                     label = opt.textContent;
-                    break;
                 }
+                newItems.push({
+                    label: opt.textContent,
+                    value: attr,
+                    selected: opt.selected
+                });
             }
 
         }
 
         this.set('label', label);
+        this.set('_items', newItems);
+
+
+        // update minWidth
+        this.set('minWidth', select.offsetWidth || 0);
 
     },
 
     open: function(details) {
+
+        var event = details.original;
+
+        if(event.target.matches('.ractive-select .dropdown *'))
+            return;
+
+        if(isTouchDevice())
+            return showDropdown(this.find('select'));
 
         this.set('open', true);
 
@@ -95,6 +123,12 @@ module.exports = Ractive.extend({
         var e = details.original;
         var target = e.target;
 
+        if(target.nodeName !== 'LI')
+           target = target.parentNode;
+
+        if(target.nodeName !== 'LI')
+            return;
+
         var valueAttribute = target.getAttribute('value');
 
         if(valueAttribute)
@@ -102,8 +136,20 @@ module.exports = Ractive.extend({
         else
             this.set('value', target.textContent);
 
+        this.close();
+
     }
 
 
 
 });
+
+function showDropdown(element) {
+    var event = document.createEvent('MouseEvents');
+    event.initMouseEvent('mousedown', true, true, window);
+    element.dispatchEvent(event);
+}
+
+function isTouchDevice() {
+    return 'ontouchstart' in window || 'onmsgesturechange' in window;
+}

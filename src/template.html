@@ -1,17 +1,33 @@
 <div class='ractive-select {{class}}'
-     style='{{style}}'
-     on-click='toggle("open")'>
+     style='min-width: {{minWidth}}px; {{style}}'
+     on-click='open(event)'
+     >
 
     <label>{{label || value || placeholder || "Select..."}}</label>
 
     <div class='arrows'></div>
 
-    <div class='dropdown{{#if open}} open{{/if}}' on-click='select(event)'>
+    <select style='position: fixed; left: -9999px;' value='{{value}}'>
         {{#if items}}
-            {{> content}}
+            {{#each _items}}
+                <option value='{{value}}'>
+                    {{label}}
+                </option>
+            {{/each}}
         {{else}}
             {{yield}}
         {{/if}}
-    </div>
+    </select>
+
+    <ul class='dropdown{{#if open}} open{{/if}}' on-click='select(event)'>
+        {{#_items}}
+            <li value='{{value}}' {{#if selected}}selected{{/if}}>
+                {{#if selected}}
+                <span class='checkmark'>✓</span>
+                {{/if}}
+                {{label}}
+            </li>
+        {{/}}
+    </ul>
 
 </div>

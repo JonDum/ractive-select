@@ -4,6 +4,11 @@
     cursor default
     user-select none
     padding 0 0.3em
+    line-height 1
+
+    label
+        margin-right 0.5em
+        vertical-align middle
 
     .arrows
         display inline-block
@@ -14,11 +19,11 @@
         &:before, &:after
             content ''
             display block
-            border 2px solid transparent
-            margin 4px 0 4px 4px
+            border 0.25em solid transparent
 
         &:before
             border-bottom-color currentColor
+            margin-bottom 2px
 
         &:after
             border-top-color currentColor
@@ -26,28 +31,37 @@
     .dropdown
         position absolute
         top 100%
-        left -10%
-        padding 1px
+        left -10px
+        right 0
 
-        min-width 120%
+        border-radius 3px
+        padding (@border-radius - 1px) 0
 
         cursor default
         display none
 
+        list-style none
+
         z-index 10
 
-        background #fff
-        border 1px solid #f0f0f0 
-        box-shadow 0 3px 3px rgba(0, 0, 0, 0.07)
+        box-shadow 0 3px 9px rgba(0, 0, 0, 0.4)
 
         &.open
             display block
 
 
-    option
-        padding 0.3em 0.5em
+    li
+        padding 0.3em 0.5em 0.3em 1.5em
+        border-top 1px solid transparent
+        border-bottom 1px solid transparent
+        &[selected]
+            padding 0.3em 0.5em
+
         &:hover
-            background #f0f0f0
+            background linear-gradient(#3D96F5, #0D7CF2)
+            color #fff
+            border-top-color #0A63C2
+            border-bottom-color #004A99
 
 
 
