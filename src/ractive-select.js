@@ -16,7 +16,19 @@ module.exports = Ractive.extend({
     },
 
     onrender: function() {
-        this.updateItems();
+
+        var self = this;
+
+        self.updateItems();
+
+        var observer = new MutationObserver(function(mutations) {
+          self.updateSize();
+        });
+
+        var select = self.find('select');
+
+        observer.observe(select, {attributes:true, attributeFilter: ['style', 'class', 'id'] });
+
     },
 
     oncomplete: function() {
@@ -92,10 +104,20 @@ module.exports = Ractive.extend({
         this.set('label', label);
         this.set('_items', newItems);
 
+        this.updateSize();
 
-        // update minWidth
-        this.set('minWidth', select.offsetWidth || 0);
+    },
 
+    updateSize: function() {
+
+        var select = this.find('select');
+        var el = this.find('div');
+        var label = this.find('label');
+
+        el.style.minWidth = select.offsetWidth + 'px';
+
+        if(select.style.maxWidth)
+            label.style.maxWidth = select.style.maxWidth;
     },
 
     open: function(details) {
