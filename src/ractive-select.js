@@ -61,10 +61,6 @@ module.exports = Ractive.extend({
 
         }, {defer: true});
 
-        self.observe('content partial', function(value, keypath) {
-            console.log('observe: content ', arguments);
-        });
-
     },
 
     onteardown: function() {
