@@ -22,10 +22,7 @@
     <ul class='dropdown{{#if open}} open{{/if}}' on-click='select(event)'>
         {{#_items}}
             <li value='{{value}}' {{#if selected}}selected{{/if}}>
-                {{#if selected}}
-                <span class='checkmark'>✓</span>
-                {{/if}}
-                {{label}}
+                {{#if selected}}<span class='checkmark'>✓</span>{{/if}}{{label}}
             </li>
         {{/}}
     </ul>
