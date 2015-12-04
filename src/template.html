@@ -1,18 +1,15 @@
 <div class='ractive-select {{class}}'
      style='{{style}}'
-     on-click='open(event)'
-     >
+     on-click='open(event)'>
 
     <label>{{label || value || placeholder || "Select..."}}</label>
 
     <div class='arrows'></div>
 
-    <select style='position: fixed; left: -9999px;' value='{{value}}'>
+    <select style='position: fixed; left: -9999px;' value='{{.value}}'>
         {{#if items}}
             {{#each _items}}
-                <option value='{{value}}'>
-                    {{label}}
-                </option>
+                <option value='{{value}}'>{{label}}</option>
             {{/each}}
         {{else}}
             {{yield}}
@@ -20,11 +17,14 @@
     </select>
 
     <ul class='dropdown{{#if open}} open{{/if}}' on-click='select(event)'>
-        {{#_items}}
-            <li value='{{value}}' {{#if selected}}selected{{/if}}>
-                {{#if selected}}<span class='checkmark'>✓</span>{{/if}}{{label}}
+        {{#each _items}}
+            <li value='{{.value}}' {{#if .selected}}selected{{/if}}>
+                {{#if .selected === true}}
+                    <span class='checkmark'></span>
+                {{/if}}
+                {{label}}
             </li>
-        {{/}}
+        {{/each}}
     </ul>
 
 </div>
