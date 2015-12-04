@@ -1,0 +1,95 @@
+
+
+<html>
+    <head>
+        <title>Ractive-Select Demo</title>
+
+        <meta charset="utf-8">
+
+        <script src='http://cdn.ractivejs.org/edge/ractive.min.js'></script>
+        <style>
+
+            body {
+                background: #ebedf1;
+                font-family: 'Lucida Grande', 'Heveltica Nueue', 'Helvetica', 'sans-serif';
+            }
+
+            demo {
+                padding: 3em;
+                display: block;
+            }
+
+            pre {
+                background: rgba(0,0,0,0.05);
+                border: 1px solid rgba(0,0,0,0.1);
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+
+
+        <demo></demo>
+
+        <script src='../ractive-select.min.js'></script>
+
+        <script id='template' type='text/ractive'>
+
+        Use ractive-select just like you would a normal select:
+
+        <pre>
+            <code>
+    &lt;select&gt;
+        &lt;option&gt;Apple&lt;/option&gt;
+        &lt;option&gt;Banana&lt;/option&gt;
+        &lt;option&gt;Orange&lt;/option&gt;
+    &lt;/select&gt;
+            </code>
+        </pre>
+
+
+        <div>
+        <span>Result:</span>
+
+        <select>
+            <option>Apple</option>
+            <option>Banana</option>
+            <option>Orange</option>
+        </select>
+        </div>
+
+        </script>
+
+        <script>
+
+            var main = new Ractive({
+
+                el: 'demo',
+
+                template: '#template',
+
+                data: {
+                    data: [],
+                    perpage: 30,
+                },
+
+                components: {
+                    select:  RactiveSelect // don't do globals, kids
+                    //select: require('ractive-select') // use a buildsystem
+                },
+
+                oncomplete: function() {
+                    //debug stuff. Don't do this in production, kids
+                    window.s = this.findComponent('select');
+                }
+
+            })
+
+        </script>
+
+    </body>
+
+</html>
+
