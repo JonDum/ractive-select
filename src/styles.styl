@@ -7,6 +7,9 @@
     padding 0 0.3em
     line-height 1
 
+    &, *, *:before, *:after
+        box-sizing border-box
+
     label
         margin-right 0.5em
 
@@ -31,10 +34,7 @@
             border-top-color currentColor
 
     .dropdown
-        position absolute
-        top 100%
-        left -10px
-        right 0
+
         margin 2px 0 0 0 // for user-agent ul styles
 
         background #fff
@@ -44,16 +44,12 @@
         padding (@border-radius - 1px) 0
 
         cursor default
-        display none
 
         list-style none
 
-        z-index 10
+        z-index 50
 
         box-shadow 0 3px 9px rgba(0, 0, 0, 0.4)
-
-        &.open
-            display block
 
 
     li
@@ -71,7 +67,7 @@
                 content '✓'
 
 
-        &:hover
+        &:hover, .selecting
             background linear-gradient(#3D96F5, #0D7CF2)
             color #fff
             border-top-color #0A63C2
@@ -79,3 +75,7 @@
 
 
 
+#ractive-select-dropdown-container
+    .dropdown
+        position fixed
+        left -9999px

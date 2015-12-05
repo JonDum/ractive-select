@@ -15,22 +15,22 @@ section + section {
   border-top: 1px dashed rgba(0,0,0,0.1);
   padding-top: 2em;
 }
-.dark {
+.dark.well {
   background: #1a1a1a;
   color: #ccc;
   padding: 3em;
   margin: 1em;
 }
-.dark .ractive-select {
+.dark.well .ractive-select {
   border: 1px solid #555;
   padding: 0.5em 1em;
 }
-.dark .ractive-select .dropdown {
+.ractive-select .dropdown.dark {
   background: #000;
   color: #aaa;
   border: 1px solid #222;
 }
-.dark .ractive-select .dropdown li:hover {
+.ractive-select .dropdown.dark li:hover {
   background: #222;
   border-color: #333;
 }
