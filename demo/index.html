@@ -7,24 +7,7 @@
         <meta charset="utf-8">
 
         <script src='http://cdn.ractivejs.org/edge/ractive.min.js'></script>
-        <style>
-
-            body {
-                background: #ebedf1;
-                font-family: 'Lucida Grande', 'Heveltica Nueue', 'Helvetica', 'sans-serif';
-            }
-
-            demo {
-                padding: 3em;
-                display: block;
-            }
-
-            pre {
-                background: rgba(0,0,0,0.05);
-                border: 1px solid rgba(0,0,0,0.1);
-            }
-
-        </style>
+        <link rel='stylesheet' href='css/styles.css'/>
 
     </head>
 
@@ -37,8 +20,28 @@
 
         <script id='template' type='text/ractive'>
 
-        Use ractive-select just like you would a normal select:
+        <h1>Ractive Select</h1>
 
+        <section>
+
+            <h2>Basic usage</h2>
+
+            <p>By binding <code>ractive-select</code> to <code>select</code>, you can use <code>&lt;select&gt;</code> tags like normal.</p>
+
+            <p>In your ractive instance:</p>
+
+        <pre>
+            <code>
+    new Ractive({
+        ...
+        components: {
+            select: require('ractive-select')
+        },
+        ...
+    });
+            </code>
+        </pre>
+        <p>In your template:</p>
         <pre>
             <code>
     &lt;select&gt;
@@ -50,15 +53,40 @@
         </pre>
 
 
-        <div>
-        <span>Result:</span>
+        <div style='margin-top:2em'>
 
-        <select>
-            <option>Apple</option>
-            <option>Banana</option>
-            <option>Orange</option>
-        </select>
+            Result:
+
+            <select>
+                <option>Apple</option>
+                <option>Banana</option>
+                <option>Orange</option>
+            </select>
         </div>
+
+        </section>
+
+        <section>
+            <h2>Styling</h2>
+            <code>ractive-select</code> provides minimal styling, so it can easily be themed as needed
+
+            <div class='dark'>
+                <select>
+                    <option>Dark Style</option>
+                    <option>Banana</option>
+                    <option>Orange</option>
+                </select>
+            </div>
+
+            <div class='light'>
+                <select>
+                    <option>Another example</option>
+                    <option>Banana</option>
+                    <option>Orange</option>
+                </select>
+            </div>
+
+        </section>
 
         </script>
 

@@ -1,0 +1,53 @@
+
+body
+    background #ebedf1
+    font-family 'Lucida Grande', 'Heveltica Nueue', 'Helvetica', 'sans-serif'
+
+demo
+    padding 3em
+    display block
+
+pre
+    background rgba(0,0,0,0.05)
+    border 1px solid rgba(0,0,0,0.1)
+
+section
+    & + section
+        margin-top 2em
+        border-top 1px dashed rgba(0,0,0,.1)
+        padding-top 2em
+
+
+.dark
+    background #1a1a1a
+    color #ccc
+    padding 3em
+    margin 1em
+
+    .ractive-select
+        border 1px solid #555
+        padding 0.5em 1em
+
+        .dropdown
+            background #000
+            color #aaa
+            border 1px solid #222
+            li:hover
+                background #222
+                border-color #333
+
+.light
+    border 1px solid fade-out(#000, 0.8)
+    padding 3em
+    margin 1em
+    background #fff
+
+    .ractive-select
+        padding 0.2em 0.5em
+        border 1px solid #999
+        background linear-gradient(#fff, #eee)
+        border-radius 3px
+        &:hover
+            border-color #bbb
+
+
