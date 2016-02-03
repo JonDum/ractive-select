@@ -207,10 +207,10 @@ module.exports = Ractive.extend({
 
         var valueAttribute = target.getAttribute('value');
 
-        if (valueAttribute)
-            this.set('value', valueAttribute);
-        else
-            this.set('value', target.textContent);
+        var value = valueAttribute || target.textContent;
+
+        this.set('value', value);
+        this.fire('change', value);
 
         this.close();
 
