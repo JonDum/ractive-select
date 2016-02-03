@@ -210,7 +210,7 @@ module.exports = Ractive.extend({
         var value = valueAttribute || target.textContent;
 
         this.set('value', value);
-        this.fire('change', value);
+        this.fire('select', value);
 
         this.close();
 
