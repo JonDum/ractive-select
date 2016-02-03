@@ -227,7 +227,7 @@ function showDropdown(element) {
 }
 
 function isTouchDevice() {
-    return 'ontouchstart' in win || 'onmsgesturechange' in win;
+    return ('ontouchstart' in win || 'onmsgesturechange' in win) && screen.width < 1200;
 }
 
 
