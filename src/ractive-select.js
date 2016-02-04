@@ -5,6 +5,8 @@ var debounce = require('lodash/function/debounce');
 var win = window;
 var doc = document;
 
+var id = 'ractive-select-dropdown-container';
+
 module.exports = Ractive.extend({
 
     template: require('./template.html'),
@@ -38,7 +40,6 @@ module.exports = Ractive.extend({
         //hoist the dropdowns into a container on the body
         var dropdown = self.find('.dropdown');
 
-        var id = 'ractive-select-dropdown-container';
         var container = doc.getElementById(id);
 
         if (!container) {
@@ -120,6 +121,20 @@ module.exports = Ractive.extend({
     onteardown: function() {
 
         doc.removeEventListener('click', this.clickHandler);
+
+        // have to manually clean this up since we hoisted it from under ractive's nose
+        var dropdown = this.find('.dropdown');
+
+        if(dropdown) {
+            dropdown.parentNode.removeChild(dropdown);
+        }
+
+        var container = doc.getElementById(id);
+
+        if(container && container.childNodes.length == 0) {
+            container.parentNode.removeChild(container);
+        }
+
 
     },
 
