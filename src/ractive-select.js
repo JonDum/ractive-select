@@ -16,7 +16,9 @@ module.exports = Ractive.extend({
     data: function() {
         return {
 
-            open: false
+            open: false,
+
+            blockScrolling: true,
 
         }
     },
@@ -48,7 +50,6 @@ module.exports = Ractive.extend({
             container.className = 'ractive-select';
             doc.body.appendChild(container);
         }
-
 
         container.appendChild(dropdown);
 
@@ -87,17 +88,21 @@ module.exports = Ractive.extend({
 
         self.observe('open', function(open) {
 
+            var blockScrolling = self.get('blockScrolling');
+
             if (open) {
 
                 doc.addEventListener('click', self.clickHandler);
 
-                disableScroll();
+                if(blockScrolling)
+                    disableScroll();
 
             } else {
 
                 doc.removeEventListener('click', self.clickHandler);
 
-                enableScroll();
+                if(blockScrolling)
+                    enableScroll();
             }
 
             updatePosition();
