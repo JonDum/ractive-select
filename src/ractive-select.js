@@ -30,14 +30,16 @@ module.exports = Ractive.extend({
         var select = self.find('select');
 
         // set up a MutationObserve to watch for style changes that may affect layout
-        var observer = new MutationObserver(function(mutations) {
-            self.updateSize();
-        });
+        if(MutationObserver) {
+            var observer = new MutationObserver(function(mutations) {
+                self.updateSize();
+            });
 
-        observer.observe(select, {
-            attributes: true,
-            attributeFilter: ['style', 'class', 'id']
-        });
+            observer.observe(select, {
+                attributes: true,
+                attributeFilter: ['style', 'class', 'id']
+            });
+        }
 
         //hoist the dropdowns into a container on the body
         var dropdown = self.find('.dropdown');
