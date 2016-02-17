@@ -1,6 +1,6 @@
 require('./styles.styl');
 
-var debounce = require('lodash/function/debounce');
+var debounce = require('lodash/debounce');
 
 var win = window;
 var doc = document;
