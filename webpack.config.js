@@ -2,30 +2,24 @@ var webpack = require('webpack');
 
 module.exports = {
     entry: 'src/ractive-select',
-    debug: false,
-    production: true,
     output: {
         path: __dirname + '/',
-        filename: 'ractive-select.min.js',
+        filename: 'ractive-select.js',
         library: 'RactiveSelect',
-        libraryTarget: 'umd'
+        libraryTarget: 'umd',
+        pathinfo: true,
     },
     resolve: {
         root: process.cwd(),
         modulesDirectories: ['node_modules', 'src'],
         extensions: ['', '.js', '.styl', '.html'],
     },
-    plugins: [
-        new webpack.optimize.UglifyJsPlugin({
-            compress: {
-                warnings: false
-            }
-        })
-    ],
     module: {
         loaders: [
             {test: /\.styl$/, loader: 'style-loader!css-loader!stylus-loader'},
             {test: /\.html/, loader: 'ractive-loader'}
         ],
     },
+    debug: true,
+    devtool: 'eval',
 }
