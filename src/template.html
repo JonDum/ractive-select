@@ -11,7 +11,11 @@
     <select style='position: fixed; left: -9999px' value='{{.value}}'>
         {{#if items}}
             {{#each _items}}
-                <option value='{{value}}'>{{label}}</option>
+                {{#if this.value}}
+                    <option value='{{.value}}'>{{.label}}</option>
+                {{else}}
+                    <option>{{this}}</option>
+                {{/if}}
             {{/each}}
         {{else}}
             {{yield}}
@@ -21,8 +25,8 @@
     <ul class='dropdown{{#if open}} open{{/if}} {{class}}' on-click='select(event)'>
         {{#each _items}}
         <li value='{{.value}}' {{#if selecting}}class='selecting'{{/if}} {{#if selected}}selected{{/if}}>
-                {{#if selected}}<span class='checkmark'></span>{{/if}}{{label}}
-            </li>
+            {{#if selected}}<span class='checkmark'></span>{{/if}}{{label}}
+        </li>
         {{/each}}
     </ul>
 
