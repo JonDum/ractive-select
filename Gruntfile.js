@@ -39,6 +39,6 @@ module.exports = function(grunt) {
 
     });
 
-    grunt.registerTask('default', ['webpck:development', 'webpack:production']);
+    grunt.registerTask('default', ['webpack:development', 'webpack:production']);
 
 };
