@@ -32,10 +32,11 @@ module.exports = Ractive.extend({
         // set up a MutationObserve to watch for style changes that may affect layout
         if(MutationObserver) {
             var observer = new MutationObserver(function(mutations) {
-                self.updateSize();
+                self.updateItems();
             });
 
             observer.observe(select, {
+                childList: true,
                 attributes: true,
                 attributeFilter: ['style', 'class', 'id']
             });
@@ -113,17 +114,14 @@ module.exports = Ractive.extend({
             defer: true
         });
 
-        self.observe('value', function(value) {
+        self.observe('value items', function(value) {
 
-            this.updateItems();
+            self.updateItems();
 
-        }, {
-            defer: true
-        });
-
-        //this.updateItems();
+        }, { defer: true });
 
     },
+
 
     onteardown: function() {
 
@@ -147,12 +145,14 @@ module.exports = Ractive.extend({
 
     updateItems: function() {
 
-        var select = this.find('select');
+        var self = this;
+
+        var select = self.find('select');
         var options = select.querySelectorAll('option');
-        var value = this.get('value');
+        var value = self.get('value');
         var attr, label;
 
-        var items = this.get('items');
+        var items = self.get('items');
 
         var newItems = [];
 
@@ -173,10 +173,10 @@ module.exports = Ractive.extend({
 
         }
 
-        this.set('label', label);
-        this.set('_items', newItems);
+        self.set('label', label);
+        self.set('_items', newItems);
 
-        this.updateSize();
+        self.updateSize.call(self);
 
     },
 
@@ -233,6 +233,7 @@ module.exports = Ractive.extend({
 
         this.set('value', value);
         this.fire('select', value);
+        this.fire('change', value);
 
         this.close();
 
