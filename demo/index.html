@@ -58,9 +58,9 @@
             Result:
 
             <select>
-                <option>Apple</option>
-                <option>Banana</option>
-                <option>Orange</option>
+                {{#fruit}}
+                    <option>{{this}}</option>
+                {{/}}
             </select>
         </div>
 
@@ -99,8 +99,7 @@
                 template: '#template',
 
                 data: {
-                    data: [],
-                    perpage: 30,
+                    fruit: ['Apple', 'Orange', 'Banana']
                 },
 
                 components: {
