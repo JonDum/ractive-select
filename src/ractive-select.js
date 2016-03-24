@@ -6,6 +6,7 @@ var win = window;
 var doc = document;
 
 var id = 'ractive-select-dropdown-container';
+var Keys = require('ractive-events-keys');
 
 module.exports = Ractive.extend({
 
@@ -15,12 +16,14 @@ module.exports = Ractive.extend({
 
     data: function() {
         return {
-
+            selecting: -1,
             open: false,
-
             blockScrolling: true,
-
         }
+    },
+
+    events: {
+        space: Keys.space,
     },
 
     onrender: function() {
@@ -75,6 +78,39 @@ module.exports = Ractive.extend({
 
         };
 
+        self.keyHandler = function(e) {
+
+            var selecting = self.get('selecting');
+            var _items = self.get('_items');
+
+            if(e.keyCode == 40) // down arrow
+                selecting++;
+            else
+            if(e.keyCode == 38) // up arrow
+                selecting--;
+
+            console.log('selecting: ', selecting);
+            console.log('keyCode: ', e.keyCode);
+            console.log('--------------');
+            if(selecting > -1 && (e.keyCode == 13 || e.keyCode == 32)) { // enter/space
+                self.select();
+            }
+            else
+            if(e.keyCode == 40 || e.keyCode == 38) {
+                selecting = clamp(selecting, 0, _items.length - 1);
+                self.set('selecting', selecting);
+            }
+            else {
+                var letter = String.fromCharCode(e.keyCode);
+                if(letter) {
+
+
+                }
+            }
+
+
+        };
+
         function updatePosition() {
 
             var bounds = el.getBoundingClientRect();
@@ -96,6 +132,7 @@ module.exports = Ractive.extend({
             if (open) {
 
                 doc.addEventListener('click', self.clickHandler);
+                doc.addEventListener('keyup', self.keyHandler);
 
                 if(blockScrolling)
                     disableScroll();
@@ -103,6 +140,9 @@ module.exports = Ractive.extend({
             } else {
 
                 doc.removeEventListener('click', self.clickHandler);
+                doc.removeEventListener('keyup', self.keyHandler);
+
+                self.set('selecting', -1);
 
                 if(blockScrolling)
                     enableScroll();
@@ -190,7 +230,11 @@ module.exports = Ractive.extend({
         var computed = win.getComputedStyle(el);
         dropdown.style.fontSize = computed.fontSize;
 
-        el.style.minWidth = dropdown.offsetWidth + 'px';
+        // we do this to push the arrows to the right,
+        // match the width of the dropdown and keep the
+        // focus circle from being all screwed up
+        var dropdownWidth = dropdown.offsetWidth + 'px';
+        label.style.width = el.style.maxWidth = dropdownWidth;
 
         if (select.style.maxWidth)
             label.style.maxWidth = select.style.maxWidth;
@@ -198,10 +242,12 @@ module.exports = Ractive.extend({
 
     open: function(details) {
 
-        var event = details.original;
+        if(details) {
+            var event = details.original;
 
-        if (event.target.matches('.ractive-select .dropdown *'))
-            return;
+            if (event.target.matches('.ractive-select .dropdown *'))
+                return;
+        }
 
         if (isTouchDevice())
             return showDropdown(this.find('select'));
@@ -216,26 +262,52 @@ module.exports = Ractive.extend({
 
     },
 
+    toggle: function(detials) {
+
+        var open = this.get('open');
+
+        if(open) {
+            if(this.get('selecting') > -1)
+                return;
+            this.set('open', false);
+        }
+        else
+            this.open();
+
+    },
+
     select: function(details) {
 
-        var e = details.original;
-        var target = e.target;
+        var value, self = this;
 
-        if (target.nodeName !== 'LI')
-            target = target.parentNode;
+        if(details) {
 
-        if (target.nodeName !== 'LI')
-            return;
+            var e = details.original;
+            var target = e.target;
 
-        var valueAttribute = target.getAttribute('value');
+            if (target.nodeName !== 'LI')
+                target = target.parentNode;
 
-        var value = valueAttribute || target.textContent;
+            if (target.nodeName !== 'LI')
+                return;
 
-        this.set('value', value);
-        this.fire('select', value);
-        this.fire('change', value);
+            var valueAttribute = target.getAttribute('value');
+            var value = valueAttribute || target.textContent;
 
-        this.close();
+        } else {
+
+            var selecting = self.get('selecting');
+            var _items = self.get('_items');
+            var item = _items[selecting];
+            value = item.value || item.label;
+
+        }
+
+        self.set('value', value);
+        self.fire('select', value);
+        self.fire('change', value);
+
+        self.close();
 
     }
 
@@ -297,3 +369,8 @@ function enableScroll() {
     win.removeEventListener('touchmove', preventDefault); // mobile
     doc.removeEventListener('keydown', preventDefaultForScrollKeys);
 }
+
+function clamp(n, min, max) {
+  return Math.min(Math.max(n, min), max);
+}
+

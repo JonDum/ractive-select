@@ -5,21 +5,22 @@
     cursor default
     user-select none
     padding 0 0.3em
-    line-height 1
+    overflow hidden
+    vertical-align sub
+    white-space nowrap
 
     &, *, *:before, *:after
         box-sizing border-box
 
     label
-        margin-right 0.5em
+        vertical-align middle
+        display inline-block
 
     .arrows
         display inline-block
         vertical-align middle
-        position absolute
-        right 0.3em
-        top 50%
-        transform translate(0, -50%)
+        position relative
+        left -1.5em
 
         &:before, &:after
             content ''
@@ -28,7 +29,7 @@
 
         &:before
             border-bottom-color currentColor
-            margin-bottom 3px
+            margin-bottom 5px
 
         &:after
             border-top-color currentColor
@@ -67,7 +68,7 @@
                 content '✓'
 
 
-        &:hover, .selecting
+        &:hover, &.selecting
             background linear-gradient(#3D96F5, #0D7CF2)
             color #fff
             border-top-color #0A63C2
