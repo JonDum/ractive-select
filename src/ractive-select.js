@@ -233,11 +233,8 @@ module.exports = Ractive.extend({
         // we do this to push the arrows to the right,
         // match the width of the dropdown and keep the
         // focus circle from being all screwed up
-        var dropdownWidth = dropdown.offsetWidth + 'px';
-        label.style.width = el.style.maxWidth = dropdownWidth;
-
-        if (select.style.maxWidth)
-            label.style.maxWidth = select.style.maxWidth;
+        el.style.minWidth = dropdown.style.minWidth =
+            Math.max(el.offsetWidth, dropdown.offsetWidth) + 'px';
     },
 
     open: function(details) {
