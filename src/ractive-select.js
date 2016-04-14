@@ -180,6 +180,8 @@ module.exports = Ractive.extend({
             container.parentNode.removeChild(container);
         }
 
+        doc.removeEventListener('click', self.clickHandler);
+        doc.removeEventListener('keyup', self.keyHandler);
 
     },
 
