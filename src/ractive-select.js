@@ -26,6 +26,10 @@ module.exports = Ractive.extend({
         space: Keys.space,
     },
 
+    decorators: {
+        preventOverscroll: require('./decorators/prevent-overscroll')
+    },
+
     onrender: function() {
 
         var self = this;
@@ -89,9 +93,6 @@ module.exports = Ractive.extend({
             if(e.keyCode == 38) // up arrow
                 selecting--;
 
-            console.log('selecting: ', selecting);
-            console.log('keyCode: ', e.keyCode);
-            console.log('--------------');
             if(selecting > -1 && (e.keyCode == 13 || e.keyCode == 32)) { // enter/space
                 self.select();
             }
@@ -108,10 +109,19 @@ module.exports = Ractive.extend({
                 }
             }
 
+        };
 
+        self.scrollHandler = function(e) {
+            updatePosition();
+            requestAnimationFrame(function() {
+                updatePosition();
+            });
         };
 
         function updatePosition() {
+            if(!el) {
+                el = self.find('*');
+            }
 
             var bounds = el.getBoundingClientRect();
             var open = self.get('open');
@@ -127,25 +137,23 @@ module.exports = Ractive.extend({
 
         self.observe('open', function(open) {
 
-            var blockScrolling = self.get('blockScrolling');
-
             if (open) {
 
-                doc.addEventListener('click', self.clickHandler);
+                doc.addEventListener('mousedown', self.clickHandler);
                 doc.addEventListener('keyup', self.keyHandler);
 
-                if(blockScrolling)
-                    disableScroll();
+                win.addEventListener('scroll', self.scrollHandler, true);
+                //el.parentNode.addEventListener('scroll', self.scrollHandler, true);
 
             } else {
 
-                doc.removeEventListener('click', self.clickHandler);
+                doc.removeEventListener('mousedown', self.clickHandler);
                 doc.removeEventListener('keyup', self.keyHandler);
 
-                self.set('selecting', -1);
+                win.removeEventListener('scroll', self.scrollHandler);
+                //el.parentNode.removeEventListener('scroll', self.scrollHandler);
 
-                if(blockScrolling)
-                    enableScroll();
+                self.set('selecting', -1);
             }
 
             updatePosition();
@@ -324,52 +332,4 @@ function isTouchDevice() {
     return ('ontouchstart' in win || 'onmsgesturechange' in win) && screen.width < 1200;
 }
 
-
-// block scrolling - from SO
-
-// left: 37, up: 38, right: 39, down: 40,
-// spacebar: 32, pageup: 33, pagedown: 34, end: 35, home: 36
-var keys = {
-    37: 1,
-    38: 1,
-    39: 1,
-    40: 1
-};
-
-function preventDefault(e) {
-    e = e || win.event;
-    if (e.preventDefault)
-        e.preventDefault();
-    e.returnValue = false;
-}
-
-function preventDefaultForScrollKeys(e) {
-    if (keys[e.keyCode]) {
-        preventDefault(e);
-        return false;
-    }
-}
-
-function disableScroll() {
-    win.addEventListener('DOMMouseScroll', preventDefault, false);
-    win.addEventListener('wheel', preventDefault); // modern standard
-    win.addEventListener('mousewheel', preventDefault); // older browsers, IE
-    doc.addEventListener('mousewheel', preventDefault);
-    win.addEventListener('touchmove', preventDefault); // mobile
-    doc.addEventListener('keydown', preventDefaultForScrollKeys);
-}
-
-function enableScroll() {
-    win.removeEventListener('DOMMouseScroll', preventDefault, false);
-
-    win.removeEventListener('wheel', preventDefault); // modern standard
-    win.removeEventListener('mousewheel', preventDefault); // older browsers, IE
-    doc.removeEventListener('mousewheel', preventDefault);
-    win.removeEventListener('touchmove', preventDefault); // mobile
-    doc.removeEventListener('keydown', preventDefaultForScrollKeys);
-}
-
-function clamp(n, min, max) {
-  return Math.min(Math.max(n, min), max);
-}
 
