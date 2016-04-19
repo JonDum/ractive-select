@@ -10,7 +10,7 @@ var Keys = require('ractive-events-keys');
 
 module.exports = Ractive.extend({
 
-    template: require('ractive!./template.html'),
+    template: require('!ractive!./template.html'),
 
     isolated: true,
 
