@@ -112,7 +112,6 @@ module.exports = Ractive.extend({
         };
 
         self.scrollHandler = function(e) {
-            updatePosition();
             requestAnimationFrame(function() {
                 updatePosition();
             });
