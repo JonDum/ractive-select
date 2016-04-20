@@ -75,7 +75,7 @@ module.exports = Ractive.extend({
 
         self.clickHandler = function(e) {
 
-            if (el.contains(e.target))
+            if(e.target.matches('.ractive-select *') || el.contains(e.target))
                 return;
 
             self.set('open', false);
