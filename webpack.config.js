@@ -20,6 +20,4 @@ module.exports = {
             {test: /\.html/, loader: 'ractive-loader'}
         ],
     },
-    debug: true,
-    devtool: 'eval',
 }
