@@ -57,7 +57,341 @@ return /******/ (function(modules) { // webpackBootstrap
   \*******************************/
 /***/ function(module, exports, __webpack_require__) {
 
-	eval("__webpack_require__(/*! ./styles.styl */ 1);\n\nvar debounce = __webpack_require__(/*! lodash/debounce */ 5);\n\nvar win = window;\nvar doc = document;\n\nvar id = 'ractive-select-dropdown-container';\nvar Keys = __webpack_require__(/*! ractive-events-keys */ 10);\n\nmodule.exports = Ractive.extend({\n\n    template: __webpack_require__(/*! ractive!./template.html */ 11),\n\n    isolated: true,\n\n    data: function() {\n        return {\n            selecting: -1,\n            open: false,\n            blockScrolling: true,\n        }\n    },\n\n    events: {\n        space: Keys.space,\n    },\n\n    decorators: {\n        preventOverscroll: __webpack_require__(/*! ./decorators/prevent-overscroll */ 12)\n    },\n\n    onrender: function() {\n\n        var self = this;\n\n        var select = self.find('select');\n\n        // set up a MutationObserve to watch for style changes that may affect layout\n        if(MutationObserver) {\n            var observer = new MutationObserver(function(mutations) {\n                self.updateItems();\n            });\n\n            observer.observe(select, {\n                childList: true,\n                attributes: true,\n                attributeFilter: ['style', 'class', 'id']\n            });\n        }\n\n        //hoist the dropdowns into a container on the body\n        var dropdown = self.find('.dropdown');\n\n        var container = doc.getElementById(id);\n\n        if (!container) {\n            container = doc.createElement('div');\n            container.id = id;\n            container.className = 'ractive-select';\n            doc.body.appendChild(container);\n        }\n\n        container.appendChild(dropdown);\n\n    },\n\n\n    oncomplete: function() {\n\n        var self = this;\n\n        var el = self.find('*');\n        var dropdown = self.find('.dropdown');\n\n        self.clickHandler = function(e) {\n\n            if (el.contains(e.target))\n                return;\n\n            self.set('open', false);\n\n        };\n\n        self.keyHandler = function(e) {\n\n            var selecting = self.get('selecting');\n            var _items = self.get('_items');\n\n            if(e.keyCode == 40) // down arrow\n                selecting++;\n            else\n            if(e.keyCode == 38) // up arrow\n                selecting--;\n\n            if(selecting > -1 && (e.keyCode == 13 || e.keyCode == 32)) { // enter/space\n                self.select();\n            }\n            else\n            if(e.keyCode == 40 || e.keyCode == 38) {\n                selecting = clamp(selecting, 0, _items.length - 1);\n                self.set('selecting', selecting);\n            }\n            else {\n                var letter = String.fromCharCode(e.keyCode);\n                if(letter) {\n\n\n                }\n            }\n\n        };\n\n        self.scrollHandler = function(e) {\n            updatePosition();\n            requestAnimationFrame(function() {\n                updatePosition();\n            });\n        };\n\n        function updatePosition() {\n            if(!el) {\n                el = self.find('*');\n            }\n\n            var bounds = el.getBoundingClientRect();\n            var open = self.get('open');\n\n            if (open) {\n                dropdown.style.left = bounds.left + 'px';\n                dropdown.style.top = (bounds.bottom + 3) + 'px';\n            } else {\n                dropdown.style.left = '-9999px';;\n            }\n\n        }\n\n        self.observe('open', function(open) {\n\n            if (open) {\n\n                doc.addEventListener('mousedown', self.clickHandler);\n                doc.addEventListener('keyup', self.keyHandler);\n\n                win.addEventListener('scroll', self.scrollHandler, true);\n                //el.parentNode.addEventListener('scroll', self.scrollHandler, true);\n\n            } else {\n\n                doc.removeEventListener('mousedown', self.clickHandler);\n                doc.removeEventListener('keyup', self.keyHandler);\n\n                win.removeEventListener('scroll', self.scrollHandler);\n                //el.parentNode.removeEventListener('scroll', self.scrollHandler);\n\n                self.set('selecting', -1);\n            }\n\n            updatePosition();\n\n        }, {\n            defer: true\n        });\n\n        self.observe('value items', function(value) {\n\n            self.updateItems();\n\n        }, { defer: true });\n\n    },\n\n\n    onteardown: function() {\n\n        doc.removeEventListener('click', this.clickHandler);\n\n        // have to manually clean this up since we hoisted it from under ractive's nose\n        var dropdown = this.find('.dropdown');\n\n        if(dropdown) {\n            dropdown.parentNode.removeChild(dropdown);\n        }\n\n        var container = doc.getElementById(id);\n\n        if(container && container.childNodes.length == 0) {\n            container.parentNode.removeChild(container);\n        }\n\n        doc.removeEventListener('click', self.clickHandler);\n        doc.removeEventListener('keyup', self.keyHandler);\n\n    },\n\n    updateItems: function() {\n\n        var self = this;\n\n        var select = self.find('select');\n        var options = select.querySelectorAll('option');\n        var value = self.get('value');\n        var attr, label;\n\n        var items = self.get('items');\n\n        var newItems = [];\n\n        if (options && options.length > 0) {\n\n            for (var i = 0, len = options.length; i < len; i++) {\n                var opt = options[i];\n                attr = opt.getAttribute('value');\n                if (attr == value) {\n                    label = opt.textContent;\n                }\n                newItems.push({\n                    label: opt.textContent,\n                    value: attr,\n                    selected: opt.selected\n                });\n            }\n\n        }\n\n        self.set('label', label);\n        self.set('_items', newItems);\n\n        self.updateSize.call(self);\n\n    },\n\n    updateSize: function() {\n\n        var select = this.find('select');\n        var dropdown = this.find('.dropdown');\n        var el = this.find('div');\n        var label = this.find('label');\n\n        var computed = win.getComputedStyle(el);\n        dropdown.style.fontSize = computed.fontSize;\n\n        // we do this to push the arrows to the right,\n        // match the width of the dropdown and keep the\n        // focus circle from being all screwed up\n        el.style.minWidth = dropdown.style.minWidth =\n            Math.max(el.offsetWidth, dropdown.offsetWidth) + 'px';\n    },\n\n    open: function(details) {\n\n        if(details) {\n            var event = details.original;\n\n            if (event.target.matches('.ractive-select .dropdown *'))\n                return;\n        }\n\n        if (isTouchDevice())\n            return showDropdown(this.find('select'));\n\n        this.set('open', true);\n\n    },\n\n    close: function(details) {\n\n        this.set('open', false);\n\n    },\n\n    toggle: function(detials) {\n\n        var open = this.get('open');\n\n        if(open) {\n            if(this.get('selecting') > -1)\n                return;\n            this.set('open', false);\n        }\n        else\n            this.open();\n\n    },\n\n    select: function(details) {\n\n        var value, self = this;\n\n        if(details) {\n\n            var e = details.original;\n            var target = e.target;\n\n            if (target.nodeName !== 'LI')\n                target = target.parentNode;\n\n            if (target.nodeName !== 'LI')\n                return;\n\n            var valueAttribute = target.getAttribute('value');\n            var value = valueAttribute || target.textContent;\n\n        } else {\n\n            var selecting = self.get('selecting');\n            var _items = self.get('_items');\n            var item = _items[selecting];\n            value = item.value || item.label;\n\n        }\n\n        self.set('value', value);\n        self.fire('select', value);\n        self.fire('change', value);\n\n        self.close();\n\n    }\n\n\n\n});\n\nfunction showDropdown(element) {\n    var event = doc.createEvent('MouseEvents');\n    event.initMouseEvent('mousedown', true, true, win);\n    element.dispatchEvent(event);\n}\n\nfunction isTouchDevice() {\n    return ('ontouchstart' in win || 'onmsgesturechange' in win) && screen.width < 1200;\n}\n\n\n\n\n/*****************\n ** WEBPACK FOOTER\n ** ./src/ractive-select.js\n ** module id = 0\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./src/ractive-select.js?");
+	__webpack_require__(/*! ./styles.styl */ 1);
+
+	var debounce = __webpack_require__(/*! lodash/debounce */ 5);
+
+	var win = window;
+	var doc = document;
+
+	var id = 'ractive-select-dropdown-container';
+	var Keys = __webpack_require__(/*! ractive-events-keys */ 10);
+
+	module.exports = Ractive.extend({
+
+	    template: __webpack_require__(/*! ractive!./template.html */ 11),
+
+	    isolated: true,
+
+	    data: function() {
+	        return {
+	            selecting: -1,
+	            open: false,
+	            blockScrolling: true,
+	        }
+	    },
+
+	    events: {
+	        space: Keys.space,
+	    },
+
+	    decorators: {
+	        preventOverscroll: __webpack_require__(/*! ./decorators/prevent-overscroll */ 12)
+	    },
+
+	    onrender: function() {
+
+	        var self = this;
+
+	        var select = self.find('select');
+
+	        // set up a MutationObserve to watch for style changes that may affect layout
+	        if(MutationObserver) {
+	            var observer = new MutationObserver(function(mutations) {
+	                self.updateItems();
+	            });
+
+	            observer.observe(select, {
+	                childList: true,
+	                attributes: true,
+	                attributeFilter: ['style', 'class', 'id']
+	            });
+	        }
+
+	        //hoist the dropdowns into a container on the body
+	        var dropdown = self.find('.dropdown');
+
+	        var container = doc.getElementById(id);
+
+	        if (!container) {
+	            container = doc.createElement('div');
+	            container.id = id;
+	            container.className = 'ractive-select';
+	            doc.body.appendChild(container);
+	        }
+
+	        container.appendChild(dropdown);
+
+	    },
+
+
+	    oncomplete: function() {
+
+	        var self = this;
+
+	        var el = self.find('*');
+	        var dropdown = self.find('.dropdown');
+
+	        self.clickHandler = function(e) {
+
+	            if(e.target.matches('.ractive-select *') || el.contains(e.target))
+	                return;
+
+	            self.set('open', false);
+
+	        };
+
+	        self.keyHandler = function(e) {
+
+	            var selecting = self.get('selecting');
+	            var _items = self.get('_items');
+
+	            if(e.keyCode == 40) // down arrow
+	                selecting++;
+	            else
+	            if(e.keyCode == 38) // up arrow
+	                selecting--;
+
+	            if(selecting > -1 && (e.keyCode == 13 || e.keyCode == 32)) { // enter/space
+	                self.select();
+	            }
+	            else
+	            if(e.keyCode == 40 || e.keyCode == 38) {
+	                selecting = clamp(selecting, 0, _items.length - 1);
+	                self.set('selecting', selecting);
+	            }
+	            else {
+	                var letter = String.fromCharCode(e.keyCode);
+	                if(letter) {
+
+
+	                }
+	            }
+
+	        };
+
+	        self.scrollHandler = function(e) {
+	            requestAnimationFrame(function() {
+	                updatePosition();
+	            });
+	        };
+
+	        function updatePosition() {
+	            if(!el) {
+	                el = self.find('*');
+	            }
+
+	            var bounds = el.getBoundingClientRect();
+	            var open = self.get('open');
+
+	            if (open) {
+	                dropdown.style.left = bounds.left + 'px';
+	                dropdown.style.top = (bounds.bottom + 3) + 'px';
+	            } else {
+	                dropdown.style.left = '-9999px';;
+	            }
+
+	        }
+
+	        self.observe('open', function(open) {
+
+	            if (open) {
+
+	                doc.addEventListener('mousedown', self.clickHandler);
+	                doc.addEventListener('keyup', self.keyHandler);
+
+	                win.addEventListener('scroll', self.scrollHandler, true);
+	                //el.parentNode.addEventListener('scroll', self.scrollHandler, true);
+
+	            } else {
+
+	                doc.removeEventListener('mousedown', self.clickHandler);
+	                doc.removeEventListener('keyup', self.keyHandler);
+
+	                win.removeEventListener('scroll', self.scrollHandler);
+	                //el.parentNode.removeEventListener('scroll', self.scrollHandler);
+
+	                self.set('selecting', -1);
+	            }
+
+	            updatePosition();
+
+	        }, {
+	            defer: true
+	        });
+
+	        self.observe('value items', function(value) {
+
+	            self.updateItems();
+
+	        }, { defer: true });
+
+	    },
+
+
+	    onteardown: function() {
+
+	        doc.removeEventListener('click', this.clickHandler);
+
+	        // have to manually clean this up since we hoisted it from under ractive's nose
+	        var dropdown = this.find('.dropdown');
+
+	        if(dropdown) {
+	            dropdown.parentNode.removeChild(dropdown);
+	        }
+
+	        var container = doc.getElementById(id);
+
+	        if(container && container.childNodes.length == 0) {
+	            container.parentNode.removeChild(container);
+	        }
+
+	        doc.removeEventListener('click', self.clickHandler);
+	        doc.removeEventListener('keyup', self.keyHandler);
+
+	    },
+
+	    updateItems: function() {
+
+	        var self = this;
+
+	        var select = self.find('select');
+	        var options = select.querySelectorAll('option');
+	        var value = self.get('value');
+	        var attr, label;
+
+	        var items = self.get('items');
+
+	        var newItems = [];
+
+	        if (options && options.length > 0) {
+
+	            for (var i = 0, len = options.length; i < len; i++) {
+	                var opt = options[i];
+	                attr = opt.getAttribute('value');
+	                if (attr == value) {
+	                    label = opt.textContent;
+	                }
+	                newItems.push({
+	                    label: opt.textContent,
+	                    value: attr,
+	                    selected: opt.selected
+	                });
+	            }
+
+	        }
+
+	        self.set('label', label);
+	        self.set('_items', newItems);
+
+	        self.updateSize.call(self);
+
+	    },
+
+	    updateSize: function() {
+
+	        var select = this.find('select');
+	        var dropdown = this.find('.dropdown');
+	        var el = this.find('div');
+	        var label = this.find('label');
+
+	        var computed = win.getComputedStyle(el);
+	        dropdown.style.fontSize = computed.fontSize;
+
+	        // we do this to push the arrows to the right,
+	        // match the width of the dropdown and keep the
+	        // focus circle from being all screwed up
+	        el.style.minWidth = dropdown.style.minWidth =
+	            Math.max(el.offsetWidth, dropdown.offsetWidth) + 'px';
+	    },
+
+	    open: function(details) {
+
+	        if(details) {
+	            var event = details.original;
+
+	            if (event.target.matches('.ractive-select .dropdown *'))
+	                return;
+	        }
+
+	        if (isTouchDevice())
+	            return showDropdown(this.find('select'));
+
+	        this.set('open', true);
+
+	    },
+
+	    close: function(details) {
+
+	        this.set('open', false);
+
+	    },
+
+	    toggle: function(detials) {
+
+	        var open = this.get('open');
+
+	        if(open) {
+	            if(this.get('selecting') > -1)
+	                return;
+	            this.set('open', false);
+	        }
+	        else
+	            this.open();
+
+	    },
+
+	    select: function(details) {
+
+	        var value, self = this;
+
+	        if(details) {
+
+	            var e = details.original;
+	            var target = e.target;
+
+	            if (target.nodeName !== 'LI')
+	                target = target.parentNode;
+
+	            if (target.nodeName !== 'LI')
+	                return;
+
+	            var valueAttribute = target.getAttribute('value');
+	            var value = valueAttribute || target.textContent;
+
+	        } else {
+
+	            var selecting = self.get('selecting');
+	            var _items = self.get('_items');
+	            var item = _items[selecting];
+	            value = item.value || item.label;
+
+	        }
+
+	        self.set('value', value);
+	        self.fire('select', value);
+	        self.fire('change', value);
+
+	        self.close();
+
+	    }
+
+
+
+	});
+
+	function showDropdown(element) {
+	    var event = doc.createEvent('MouseEvents');
+	    event.initMouseEvent('mousedown', true, true, win);
+	    element.dispatchEvent(event);
+	}
+
+	function isTouchDevice() {
+	    return ('ontouchstart' in win || 'onmsgesturechange' in win) && screen.width < 1200;
+	}
+
+
+
 
 /***/ },
 /* 1 */
@@ -66,7 +400,27 @@ return /******/ (function(modules) { // webpackBootstrap
   \*************************/
 /***/ function(module, exports, __webpack_require__) {
 
-	eval("// style-loader: Adds some css to the DOM by adding a <style> tag\n\n// load the styles\nvar content = __webpack_require__(/*! !./../~/css-loader!./../~/stylus-loader!./styles.styl */ 2);\nif(typeof content === 'string') content = [[module.id, content, '']];\n// add the styles to the DOM\nvar update = __webpack_require__(/*! ./../~/style-loader/addStyles.js */ 4)(content, {});\nif(content.locals) module.exports = content.locals;\n// Hot Module Replacement\nif(false) {\n\t// When the styles change, update the <style> tags\n\tif(!content.locals) {\n\t\tmodule.hot.accept(\"!!./../node_modules/css-loader/index.js!./../node_modules/stylus-loader/index.js!./styles.styl\", function() {\n\t\t\tvar newContent = require(\"!!./../node_modules/css-loader/index.js!./../node_modules/stylus-loader/index.js!./styles.styl\");\n\t\t\tif(typeof newContent === 'string') newContent = [[module.id, newContent, '']];\n\t\t\tupdate(newContent);\n\t\t});\n\t}\n\t// When the module is disposed, remove the <style> tags\n\tmodule.hot.dispose(function() { update(); });\n}\n\n/*****************\n ** WEBPACK FOOTER\n ** ./src/styles.styl\n ** module id = 1\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./src/styles.styl?");
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(/*! !./../~/css-loader!./../~/stylus-loader!./styles.styl */ 2);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(/*! ./../~/style-loader/addStyles.js */ 4)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../node_modules/css-loader/index.js!./../node_modules/stylus-loader/index.js!./styles.styl", function() {
+				var newContent = require("!!./../node_modules/css-loader/index.js!./../node_modules/stylus-loader/index.js!./styles.styl");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
 
 /***/ },
 /* 2 */
@@ -75,7 +429,15 @@ return /******/ (function(modules) { // webpackBootstrap
   \**********************************************************/
 /***/ function(module, exports, __webpack_require__) {
 
-	eval("exports = module.exports = __webpack_require__(/*! ./../~/css-loader/lib/css-base.js */ 3)();\n// imports\n\n\n// module\nexports.push([module.id, \".ractive-select {\\n  display: inline-block;\\n  position: relative;\\n  cursor: default;\\n  user-select: none;\\n  padding: 0 0.3em;\\n  overflow: hidden;\\n  vertical-align: sub;\\n  white-space: nowrap;\\n}\\n.ractive-select,\\n.ractive-select *,\\n.ractive-select *:before,\\n.ractive-select *:after {\\n  box-sizing: border-box;\\n}\\n.ractive-select label {\\n  vertical-align: middle;\\n  display: inline-block;\\n}\\n.ractive-select .arrows {\\n  display: inline-block;\\n  vertical-align: middle;\\n  float: right;\\n  margin-left: 0.5em;\\n}\\n.ractive-select .arrows:before,\\n.ractive-select .arrows:after {\\n  content: '';\\n  display: block;\\n  border: 0.25em solid transparent;\\n}\\n.ractive-select .arrows:before {\\n  border-bottom-color: currentColor;\\n  margin-bottom: 5px;\\n}\\n.ractive-select .arrows:after {\\n  border-top-color: currentColor;\\n}\\n.ractive-select .dropdown {\\n  margin: 2px 0 0 0;\\n  background: #fff;\\n  color: #333;\\n  box-shadow: 0 3px 9px rgba(0,0,0,0.4);\\n  border-radius: 3px;\\n  padding: 2px 0;\\n  cursor: default;\\n  list-style: none;\\n  z-index: 50;\\n  max-height: 400px;\\n  overflow-y: scroll;\\n}\\n.ractive-select li {\\n  padding: 0.3em 0.5em 0.3em 1.5em;\\n  border-top: 1px solid transparent;\\n  border-bottom: 1px solid transparent;\\n  white-space: nowrap;\\n}\\n.ractive-select li[selected] {\\n  padding: 0.3em 0.5em;\\n}\\n.ractive-select li .checkmark {\\n  margin-right: 0.2em;\\n}\\n.ractive-select li .checkmark:before {\\n  content: '\\\\2713';\\n}\\n.ractive-select li:hover,\\n.ractive-select li.selecting {\\n  background: linear-gradient(#3d96f5, #0d7cf2);\\n  color: #fff;\\n  border-top-color: #0a63c2;\\n  border-bottom-color: #004a99;\\n}\\n#ractive-select-dropdown-container .dropdown {\\n  position: fixed;\\n  left: -9999px;\\n}\\n\", \"\"]);\n\n// exports\n\n\n/*****************\n ** WEBPACK FOOTER\n ** ./~/css-loader!./~/stylus-loader!./src/styles.styl\n ** module id = 2\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./src/styles.styl?./~/css-loader!./~/stylus-loader");
+	exports = module.exports = __webpack_require__(/*! ./../~/css-loader/lib/css-base.js */ 3)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".ractive-select {\n  display: inline-block;\n  position: relative;\n  cursor: default;\n  user-select: none;\n  padding: 0 0.3em;\n  overflow: hidden;\n  vertical-align: sub;\n  white-space: nowrap;\n}\n.ractive-select,\n.ractive-select *,\n.ractive-select *:before,\n.ractive-select *:after {\n  box-sizing: border-box;\n}\n.ractive-select label {\n  vertical-align: middle;\n  display: inline-block;\n}\n.ractive-select .arrows {\n  display: inline-block;\n  vertical-align: middle;\n  float: right;\n  margin-left: 0.5em;\n}\n.ractive-select .arrows:before,\n.ractive-select .arrows:after {\n  content: '';\n  display: block;\n  border: 0.25em solid transparent;\n}\n.ractive-select .arrows:before {\n  border-bottom-color: currentColor;\n  margin-bottom: 5px;\n}\n.ractive-select .arrows:after {\n  border-top-color: currentColor;\n}\n.ractive-select .dropdown {\n  margin: 2px 0 0 0;\n  background: #fff;\n  color: #333;\n  box-shadow: 0 3px 9px rgba(0,0,0,0.4);\n  border-radius: 3px;\n  padding: 2px 0;\n  cursor: default;\n  list-style: none;\n  z-index: 50;\n  max-height: 400px;\n  overflow-y: scroll;\n}\n.ractive-select li {\n  padding: 0.3em 0.5em 0.3em 1.5em;\n  border-top: 1px solid transparent;\n  border-bottom: 1px solid transparent;\n  white-space: nowrap;\n}\n.ractive-select li[selected] {\n  padding: 0.3em 0.5em;\n}\n.ractive-select li .checkmark {\n  margin-right: 0.2em;\n}\n.ractive-select li .checkmark:before {\n  content: '\\2713';\n}\n.ractive-select li:hover,\n.ractive-select li.selecting {\n  background: linear-gradient(#3d96f5, #0d7cf2);\n  color: #fff;\n  border-top-color: #0a63c2;\n  border-bottom-color: #004a99;\n}\n#ractive-select-dropdown-container .dropdown {\n  position: fixed;\n  left: -9999px;\n}\n", ""]);
+
+	// exports
+
 
 /***/ },
 /* 3 */
@@ -84,7 +446,57 @@ return /******/ (function(modules) { // webpackBootstrap
   \**************************************/
 /***/ function(module, exports) {
 
-	eval("/*\r\n\tMIT License http://www.opensource.org/licenses/mit-license.php\r\n\tAuthor Tobias Koppers @sokra\r\n*/\r\n// css base code, injected by the css-loader\r\nmodule.exports = function() {\r\n\tvar list = [];\r\n\r\n\t// return the list of modules as css string\r\n\tlist.toString = function toString() {\r\n\t\tvar result = [];\r\n\t\tfor(var i = 0; i < this.length; i++) {\r\n\t\t\tvar item = this[i];\r\n\t\t\tif(item[2]) {\r\n\t\t\t\tresult.push(\"@media \" + item[2] + \"{\" + item[1] + \"}\");\r\n\t\t\t} else {\r\n\t\t\t\tresult.push(item[1]);\r\n\t\t\t}\r\n\t\t}\r\n\t\treturn result.join(\"\");\r\n\t};\r\n\r\n\t// import a list of modules into the list\r\n\tlist.i = function(modules, mediaQuery) {\r\n\t\tif(typeof modules === \"string\")\r\n\t\t\tmodules = [[null, modules, \"\"]];\r\n\t\tvar alreadyImportedModules = {};\r\n\t\tfor(var i = 0; i < this.length; i++) {\r\n\t\t\tvar id = this[i][0];\r\n\t\t\tif(typeof id === \"number\")\r\n\t\t\t\talreadyImportedModules[id] = true;\r\n\t\t}\r\n\t\tfor(i = 0; i < modules.length; i++) {\r\n\t\t\tvar item = modules[i];\r\n\t\t\t// skip already imported module\r\n\t\t\t// this implementation is not 100% perfect for weird media query combinations\r\n\t\t\t//  when a module is imported multiple times with different media queries.\r\n\t\t\t//  I hope this will never occur (Hey this way we have smaller bundles)\r\n\t\t\tif(typeof item[0] !== \"number\" || !alreadyImportedModules[item[0]]) {\r\n\t\t\t\tif(mediaQuery && !item[2]) {\r\n\t\t\t\t\titem[2] = mediaQuery;\r\n\t\t\t\t} else if(mediaQuery) {\r\n\t\t\t\t\titem[2] = \"(\" + item[2] + \") and (\" + mediaQuery + \")\";\r\n\t\t\t\t}\r\n\t\t\t\tlist.push(item);\r\n\t\t\t}\r\n\t\t}\r\n\t};\r\n\treturn list;\r\n};\r\n\n\n/*****************\n ** WEBPACK FOOTER\n ** ./~/css-loader/lib/css-base.js\n ** module id = 3\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./~/css-loader/lib/css-base.js?");
+	/*
+		MIT License http://www.opensource.org/licenses/mit-license.php
+		Author Tobias Koppers @sokra
+	*/
+	// css base code, injected by the css-loader
+	module.exports = function() {
+		var list = [];
+
+		// return the list of modules as css string
+		list.toString = function toString() {
+			var result = [];
+			for(var i = 0; i < this.length; i++) {
+				var item = this[i];
+				if(item[2]) {
+					result.push("@media " + item[2] + "{" + item[1] + "}");
+				} else {
+					result.push(item[1]);
+				}
+			}
+			return result.join("");
+		};
+
+		// import a list of modules into the list
+		list.i = function(modules, mediaQuery) {
+			if(typeof modules === "string")
+				modules = [[null, modules, ""]];
+			var alreadyImportedModules = {};
+			for(var i = 0; i < this.length; i++) {
+				var id = this[i][0];
+				if(typeof id === "number")
+					alreadyImportedModules[id] = true;
+			}
+			for(i = 0; i < modules.length; i++) {
+				var item = modules[i];
+				// skip already imported module
+				// this implementation is not 100% perfect for weird media query combinations
+				//  when a module is imported multiple times with different media queries.
+				//  I hope this will never occur (Hey this way we have smaller bundles)
+				if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+					if(mediaQuery && !item[2]) {
+						item[2] = mediaQuery;
+					} else if(mediaQuery) {
+						item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+					}
+					list.push(item);
+				}
+			}
+		};
+		return list;
+	};
+
 
 /***/ },
 /* 4 */
@@ -93,7 +505,226 @@ return /******/ (function(modules) { // webpackBootstrap
   \*************************************/
 /***/ function(module, exports, __webpack_require__) {
 
-	eval("/*\r\n\tMIT License http://www.opensource.org/licenses/mit-license.php\r\n\tAuthor Tobias Koppers @sokra\r\n*/\r\nvar stylesInDom = {},\r\n\tmemoize = function(fn) {\r\n\t\tvar memo;\r\n\t\treturn function () {\r\n\t\t\tif (typeof memo === \"undefined\") memo = fn.apply(this, arguments);\r\n\t\t\treturn memo;\r\n\t\t};\r\n\t},\r\n\tisOldIE = memoize(function() {\r\n\t\treturn /msie [6-9]\\b/.test(window.navigator.userAgent.toLowerCase());\r\n\t}),\r\n\tgetHeadElement = memoize(function () {\r\n\t\treturn document.head || document.getElementsByTagName(\"head\")[0];\r\n\t}),\r\n\tsingletonElement = null,\r\n\tsingletonCounter = 0;\r\n\r\nmodule.exports = function(list, options) {\r\n\tif(true) {\r\n\t\tif(typeof document !== \"object\") throw new Error(\"The style-loader cannot be used in a non-browser environment\");\r\n\t}\r\n\r\n\toptions = options || {};\r\n\t// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>\r\n\t// tags it will allow on a page\r\n\tif (typeof options.singleton === \"undefined\") options.singleton = isOldIE();\r\n\r\n\tvar styles = listToStyles(list);\r\n\taddStylesToDom(styles, options);\r\n\r\n\treturn function update(newList) {\r\n\t\tvar mayRemove = [];\r\n\t\tfor(var i = 0; i < styles.length; i++) {\r\n\t\t\tvar item = styles[i];\r\n\t\t\tvar domStyle = stylesInDom[item.id];\r\n\t\t\tdomStyle.refs--;\r\n\t\t\tmayRemove.push(domStyle);\r\n\t\t}\r\n\t\tif(newList) {\r\n\t\t\tvar newStyles = listToStyles(newList);\r\n\t\t\taddStylesToDom(newStyles, options);\r\n\t\t}\r\n\t\tfor(var i = 0; i < mayRemove.length; i++) {\r\n\t\t\tvar domStyle = mayRemove[i];\r\n\t\t\tif(domStyle.refs === 0) {\r\n\t\t\t\tfor(var j = 0; j < domStyle.parts.length; j++)\r\n\t\t\t\t\tdomStyle.parts[j]();\r\n\t\t\t\tdelete stylesInDom[domStyle.id];\r\n\t\t\t}\r\n\t\t}\r\n\t};\r\n}\r\n\r\nfunction addStylesToDom(styles, options) {\r\n\tfor(var i = 0; i < styles.length; i++) {\r\n\t\tvar item = styles[i];\r\n\t\tvar domStyle = stylesInDom[item.id];\r\n\t\tif(domStyle) {\r\n\t\t\tdomStyle.refs++;\r\n\t\t\tfor(var j = 0; j < domStyle.parts.length; j++) {\r\n\t\t\t\tdomStyle.parts[j](item.parts[j]);\r\n\t\t\t}\r\n\t\t\tfor(; j < item.parts.length; j++) {\r\n\t\t\t\tdomStyle.parts.push(addStyle(item.parts[j], options));\r\n\t\t\t}\r\n\t\t} else {\r\n\t\t\tvar parts = [];\r\n\t\t\tfor(var j = 0; j < item.parts.length; j++) {\r\n\t\t\t\tparts.push(addStyle(item.parts[j], options));\r\n\t\t\t}\r\n\t\t\tstylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};\r\n\t\t}\r\n\t}\r\n}\r\n\r\nfunction listToStyles(list) {\r\n\tvar styles = [];\r\n\tvar newStyles = {};\r\n\tfor(var i = 0; i < list.length; i++) {\r\n\t\tvar item = list[i];\r\n\t\tvar id = item[0];\r\n\t\tvar css = item[1];\r\n\t\tvar media = item[2];\r\n\t\tvar sourceMap = item[3];\r\n\t\tvar part = {css: css, media: media, sourceMap: sourceMap};\r\n\t\tif(!newStyles[id])\r\n\t\t\tstyles.push(newStyles[id] = {id: id, parts: [part]});\r\n\t\telse\r\n\t\t\tnewStyles[id].parts.push(part);\r\n\t}\r\n\treturn styles;\r\n}\r\n\r\nfunction createStyleElement() {\r\n\tvar styleElement = document.createElement(\"style\");\r\n\tvar head = getHeadElement();\r\n\tstyleElement.type = \"text/css\";\r\n\thead.appendChild(styleElement);\r\n\treturn styleElement;\r\n}\r\n\r\nfunction createLinkElement() {\r\n\tvar linkElement = document.createElement(\"link\");\r\n\tvar head = getHeadElement();\r\n\tlinkElement.rel = \"stylesheet\";\r\n\thead.appendChild(linkElement);\r\n\treturn linkElement;\r\n}\r\n\r\nfunction addStyle(obj, options) {\r\n\tvar styleElement, update, remove;\r\n\r\n\tif (options.singleton) {\r\n\t\tvar styleIndex = singletonCounter++;\r\n\t\tstyleElement = singletonElement || (singletonElement = createStyleElement());\r\n\t\tupdate = applyToSingletonTag.bind(null, styleElement, styleIndex, false);\r\n\t\tremove = applyToSingletonTag.bind(null, styleElement, styleIndex, true);\r\n\t} else if(obj.sourceMap &&\r\n\t\ttypeof URL === \"function\" &&\r\n\t\ttypeof URL.createObjectURL === \"function\" &&\r\n\t\ttypeof URL.revokeObjectURL === \"function\" &&\r\n\t\ttypeof Blob === \"function\" &&\r\n\t\ttypeof btoa === \"function\") {\r\n\t\tstyleElement = createLinkElement();\r\n\t\tupdate = updateLink.bind(null, styleElement);\r\n\t\tremove = function() {\r\n\t\t\tstyleElement.parentNode.removeChild(styleElement);\r\n\t\t\tif(styleElement.href)\r\n\t\t\t\tURL.revokeObjectURL(styleElement.href);\r\n\t\t};\r\n\t} else {\r\n\t\tstyleElement = createStyleElement();\r\n\t\tupdate = applyToTag.bind(null, styleElement);\r\n\t\tremove = function() {\r\n\t\t\tstyleElement.parentNode.removeChild(styleElement);\r\n\t\t};\r\n\t}\r\n\r\n\tupdate(obj);\r\n\r\n\treturn function updateStyle(newObj) {\r\n\t\tif(newObj) {\r\n\t\t\tif(newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap)\r\n\t\t\t\treturn;\r\n\t\t\tupdate(obj = newObj);\r\n\t\t} else {\r\n\t\t\tremove();\r\n\t\t}\r\n\t};\r\n}\r\n\r\nvar replaceText = (function () {\r\n\tvar textStore = [];\r\n\r\n\treturn function (index, replacement) {\r\n\t\ttextStore[index] = replacement;\r\n\t\treturn textStore.filter(Boolean).join('\\n');\r\n\t};\r\n})();\r\n\r\nfunction applyToSingletonTag(styleElement, index, remove, obj) {\r\n\tvar css = remove ? \"\" : obj.css;\r\n\r\n\tif (styleElement.styleSheet) {\r\n\t\tstyleElement.styleSheet.cssText = replaceText(index, css);\r\n\t} else {\r\n\t\tvar cssNode = document.createTextNode(css);\r\n\t\tvar childNodes = styleElement.childNodes;\r\n\t\tif (childNodes[index]) styleElement.removeChild(childNodes[index]);\r\n\t\tif (childNodes.length) {\r\n\t\t\tstyleElement.insertBefore(cssNode, childNodes[index]);\r\n\t\t} else {\r\n\t\t\tstyleElement.appendChild(cssNode);\r\n\t\t}\r\n\t}\r\n}\r\n\r\nfunction applyToTag(styleElement, obj) {\r\n\tvar css = obj.css;\r\n\tvar media = obj.media;\r\n\tvar sourceMap = obj.sourceMap;\r\n\r\n\tif(media) {\r\n\t\tstyleElement.setAttribute(\"media\", media)\r\n\t}\r\n\r\n\tif(styleElement.styleSheet) {\r\n\t\tstyleElement.styleSheet.cssText = css;\r\n\t} else {\r\n\t\twhile(styleElement.firstChild) {\r\n\t\t\tstyleElement.removeChild(styleElement.firstChild);\r\n\t\t}\r\n\t\tstyleElement.appendChild(document.createTextNode(css));\r\n\t}\r\n}\r\n\r\nfunction updateLink(linkElement, obj) {\r\n\tvar css = obj.css;\r\n\tvar media = obj.media;\r\n\tvar sourceMap = obj.sourceMap;\r\n\r\n\tif(sourceMap) {\r\n\t\t// http://stackoverflow.com/a/26603875\r\n\t\tcss += \"\\n/*# sourceMappingURL=data:application/json;base64,\" + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + \" */\";\r\n\t}\r\n\r\n\tvar blob = new Blob([css], { type: \"text/css\" });\r\n\r\n\tvar oldSrc = linkElement.href;\r\n\r\n\tlinkElement.href = URL.createObjectURL(blob);\r\n\r\n\tif(oldSrc)\r\n\t\tURL.revokeObjectURL(oldSrc);\r\n}\r\n\n\n/*****************\n ** WEBPACK FOOTER\n ** ./~/style-loader/addStyles.js\n ** module id = 4\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./~/style-loader/addStyles.js?");
+	/*
+		MIT License http://www.opensource.org/licenses/mit-license.php
+		Author Tobias Koppers @sokra
+	*/
+	var stylesInDom = {},
+		memoize = function(fn) {
+			var memo;
+			return function () {
+				if (typeof memo === "undefined") memo = fn.apply(this, arguments);
+				return memo;
+			};
+		},
+		isOldIE = memoize(function() {
+			return /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase());
+		}),
+		getHeadElement = memoize(function () {
+			return document.head || document.getElementsByTagName("head")[0];
+		}),
+		singletonElement = null,
+		singletonCounter = 0;
+
+	module.exports = function(list, options) {
+		if(true) {
+			if(typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+		}
+
+		options = options || {};
+		// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+		// tags it will allow on a page
+		if (typeof options.singleton === "undefined") options.singleton = isOldIE();
+
+		var styles = listToStyles(list);
+		addStylesToDom(styles, options);
+
+		return function update(newList) {
+			var mayRemove = [];
+			for(var i = 0; i < styles.length; i++) {
+				var item = styles[i];
+				var domStyle = stylesInDom[item.id];
+				domStyle.refs--;
+				mayRemove.push(domStyle);
+			}
+			if(newList) {
+				var newStyles = listToStyles(newList);
+				addStylesToDom(newStyles, options);
+			}
+			for(var i = 0; i < mayRemove.length; i++) {
+				var domStyle = mayRemove[i];
+				if(domStyle.refs === 0) {
+					for(var j = 0; j < domStyle.parts.length; j++)
+						domStyle.parts[j]();
+					delete stylesInDom[domStyle.id];
+				}
+			}
+		};
+	}
+
+	function addStylesToDom(styles, options) {
+		for(var i = 0; i < styles.length; i++) {
+			var item = styles[i];
+			var domStyle = stylesInDom[item.id];
+			if(domStyle) {
+				domStyle.refs++;
+				for(var j = 0; j < domStyle.parts.length; j++) {
+					domStyle.parts[j](item.parts[j]);
+				}
+				for(; j < item.parts.length; j++) {
+					domStyle.parts.push(addStyle(item.parts[j], options));
+				}
+			} else {
+				var parts = [];
+				for(var j = 0; j < item.parts.length; j++) {
+					parts.push(addStyle(item.parts[j], options));
+				}
+				stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
+			}
+		}
+	}
+
+	function listToStyles(list) {
+		var styles = [];
+		var newStyles = {};
+		for(var i = 0; i < list.length; i++) {
+			var item = list[i];
+			var id = item[0];
+			var css = item[1];
+			var media = item[2];
+			var sourceMap = item[3];
+			var part = {css: css, media: media, sourceMap: sourceMap};
+			if(!newStyles[id])
+				styles.push(newStyles[id] = {id: id, parts: [part]});
+			else
+				newStyles[id].parts.push(part);
+		}
+		return styles;
+	}
+
+	function createStyleElement() {
+		var styleElement = document.createElement("style");
+		var head = getHeadElement();
+		styleElement.type = "text/css";
+		head.appendChild(styleElement);
+		return styleElement;
+	}
+
+	function createLinkElement() {
+		var linkElement = document.createElement("link");
+		var head = getHeadElement();
+		linkElement.rel = "stylesheet";
+		head.appendChild(linkElement);
+		return linkElement;
+	}
+
+	function addStyle(obj, options) {
+		var styleElement, update, remove;
+
+		if (options.singleton) {
+			var styleIndex = singletonCounter++;
+			styleElement = singletonElement || (singletonElement = createStyleElement());
+			update = applyToSingletonTag.bind(null, styleElement, styleIndex, false);
+			remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true);
+		} else if(obj.sourceMap &&
+			typeof URL === "function" &&
+			typeof URL.createObjectURL === "function" &&
+			typeof URL.revokeObjectURL === "function" &&
+			typeof Blob === "function" &&
+			typeof btoa === "function") {
+			styleElement = createLinkElement();
+			update = updateLink.bind(null, styleElement);
+			remove = function() {
+				styleElement.parentNode.removeChild(styleElement);
+				if(styleElement.href)
+					URL.revokeObjectURL(styleElement.href);
+			};
+		} else {
+			styleElement = createStyleElement();
+			update = applyToTag.bind(null, styleElement);
+			remove = function() {
+				styleElement.parentNode.removeChild(styleElement);
+			};
+		}
+
+		update(obj);
+
+		return function updateStyle(newObj) {
+			if(newObj) {
+				if(newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap)
+					return;
+				update(obj = newObj);
+			} else {
+				remove();
+			}
+		};
+	}
+
+	var replaceText = (function () {
+		var textStore = [];
+
+		return function (index, replacement) {
+			textStore[index] = replacement;
+			return textStore.filter(Boolean).join('\n');
+		};
+	})();
+
+	function applyToSingletonTag(styleElement, index, remove, obj) {
+		var css = remove ? "" : obj.css;
+
+		if (styleElement.styleSheet) {
+			styleElement.styleSheet.cssText = replaceText(index, css);
+		} else {
+			var cssNode = document.createTextNode(css);
+			var childNodes = styleElement.childNodes;
+			if (childNodes[index]) styleElement.removeChild(childNodes[index]);
+			if (childNodes.length) {
+				styleElement.insertBefore(cssNode, childNodes[index]);
+			} else {
+				styleElement.appendChild(cssNode);
+			}
+		}
+	}
+
+	function applyToTag(styleElement, obj) {
+		var css = obj.css;
+		var media = obj.media;
+		var sourceMap = obj.sourceMap;
+
+		if(media) {
+			styleElement.setAttribute("media", media)
+		}
+
+		if(styleElement.styleSheet) {
+			styleElement.styleSheet.cssText = css;
+		} else {
+			while(styleElement.firstChild) {
+				styleElement.removeChild(styleElement.firstChild);
+			}
+			styleElement.appendChild(document.createTextNode(css));
+		}
+	}
+
+	function updateLink(linkElement, obj) {
+		var css = obj.css;
+		var media = obj.media;
+		var sourceMap = obj.sourceMap;
+
+		if(sourceMap) {
+			// http://stackoverflow.com/a/26603875
+			css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
+		}
+
+		var blob = new Blob([css], { type: "text/css" });
+
+		var oldSrc = linkElement.href;
+
+		linkElement.href = URL.createObjectURL(blob);
+
+		if(oldSrc)
+			URL.revokeObjectURL(oldSrc);
+	}
+
 
 /***/ },
 /* 5 */
@@ -102,7 +733,184 @@ return /******/ (function(modules) { // webpackBootstrap
   \***************************************************************/
 /***/ function(module, exports, __webpack_require__) {
 
-	eval("var isObject = __webpack_require__(/*! ./isObject */ 6),\n    now = __webpack_require__(/*! ./now */ 7),\n    toNumber = __webpack_require__(/*! ./toNumber */ 8);\n\n/** Used as the `TypeError` message for \"Functions\" methods. */\nvar FUNC_ERROR_TEXT = 'Expected a function';\n\n/* Built-in method references for those with the same name as other `lodash` methods. */\nvar nativeMax = Math.max;\n\n/**\n * Creates a debounced function that delays invoking `func` until after `wait`\n * milliseconds have elapsed since the last time the debounced function was\n * invoked. The debounced function comes with a `cancel` method to cancel\n * delayed `func` invocations and a `flush` method to immediately invoke them.\n * Provide an options object to indicate whether `func` should be invoked on\n * the leading and/or trailing edge of the `wait` timeout. The `func` is invoked\n * with the last arguments provided to the debounced function. Subsequent calls\n * to the debounced function return the result of the last `func` invocation.\n *\n * **Note:** If `leading` and `trailing` options are `true`, `func` is invoked\n * on the trailing edge of the timeout only if the debounced function is\n * invoked more than once during the `wait` timeout.\n *\n * See [David Corbacho's article](http://drupalmotion.com/article/debounce-and-throttle-visual-explanation)\n * for details over the differences between `_.debounce` and `_.throttle`.\n *\n * @static\n * @memberOf _\n * @category Function\n * @param {Function} func The function to debounce.\n * @param {number} [wait=0] The number of milliseconds to delay.\n * @param {Object} [options] The options object.\n * @param {boolean} [options.leading=false] Specify invoking on the leading\n *  edge of the timeout.\n * @param {number} [options.maxWait] The maximum time `func` is allowed to be\n *  delayed before it's invoked.\n * @param {boolean} [options.trailing=true] Specify invoking on the trailing\n *  edge of the timeout.\n * @returns {Function} Returns the new debounced function.\n * @example\n *\n * // Avoid costly calculations while the window size is in flux.\n * jQuery(window).on('resize', _.debounce(calculateLayout, 150));\n *\n * // Invoke `sendMail` when clicked, debouncing subsequent calls.\n * jQuery(element).on('click', _.debounce(sendMail, 300, {\n *   'leading': true,\n *   'trailing': false\n * }));\n *\n * // Ensure `batchLog` is invoked once after 1 second of debounced calls.\n * var debounced = _.debounce(batchLog, 250, { 'maxWait': 1000 });\n * var source = new EventSource('/stream');\n * jQuery(source).on('message', debounced);\n *\n * // Cancel the trailing debounced invocation.\n * jQuery(window).on('popstate', debounced.cancel);\n */\nfunction debounce(func, wait, options) {\n  var args,\n      maxTimeoutId,\n      result,\n      stamp,\n      thisArg,\n      timeoutId,\n      trailingCall,\n      lastCalled = 0,\n      leading = false,\n      maxWait = false,\n      trailing = true;\n\n  if (typeof func != 'function') {\n    throw new TypeError(FUNC_ERROR_TEXT);\n  }\n  wait = toNumber(wait) || 0;\n  if (isObject(options)) {\n    leading = !!options.leading;\n    maxWait = 'maxWait' in options && nativeMax(toNumber(options.maxWait) || 0, wait);\n    trailing = 'trailing' in options ? !!options.trailing : trailing;\n  }\n\n  function cancel() {\n    if (timeoutId) {\n      clearTimeout(timeoutId);\n    }\n    if (maxTimeoutId) {\n      clearTimeout(maxTimeoutId);\n    }\n    lastCalled = 0;\n    args = maxTimeoutId = thisArg = timeoutId = trailingCall = undefined;\n  }\n\n  function complete(isCalled, id) {\n    if (id) {\n      clearTimeout(id);\n    }\n    maxTimeoutId = timeoutId = trailingCall = undefined;\n    if (isCalled) {\n      lastCalled = now();\n      result = func.apply(thisArg, args);\n      if (!timeoutId && !maxTimeoutId) {\n        args = thisArg = undefined;\n      }\n    }\n  }\n\n  function delayed() {\n    var remaining = wait - (now() - stamp);\n    if (remaining <= 0 || remaining > wait) {\n      complete(trailingCall, maxTimeoutId);\n    } else {\n      timeoutId = setTimeout(delayed, remaining);\n    }\n  }\n\n  function flush() {\n    if ((timeoutId && trailingCall) || (maxTimeoutId && trailing)) {\n      result = func.apply(thisArg, args);\n    }\n    cancel();\n    return result;\n  }\n\n  function maxDelayed() {\n    complete(trailing, timeoutId);\n  }\n\n  function debounced() {\n    args = arguments;\n    stamp = now();\n    thisArg = this;\n    trailingCall = trailing && (timeoutId || !leading);\n\n    if (maxWait === false) {\n      var leadingCall = leading && !timeoutId;\n    } else {\n      if (!lastCalled && !maxTimeoutId && !leading) {\n        lastCalled = stamp;\n      }\n      var remaining = maxWait - (stamp - lastCalled);\n\n      var isCalled = (remaining <= 0 || remaining > maxWait) &&\n        (leading || maxTimeoutId);\n\n      if (isCalled) {\n        if (maxTimeoutId) {\n          maxTimeoutId = clearTimeout(maxTimeoutId);\n        }\n        lastCalled = stamp;\n        result = func.apply(thisArg, args);\n      }\n      else if (!maxTimeoutId) {\n        maxTimeoutId = setTimeout(maxDelayed, remaining);\n      }\n    }\n    if (isCalled && timeoutId) {\n      timeoutId = clearTimeout(timeoutId);\n    }\n    else if (!timeoutId && wait !== maxWait) {\n      timeoutId = setTimeout(delayed, wait);\n    }\n    if (leadingCall) {\n      isCalled = true;\n      result = func.apply(thisArg, args);\n    }\n    if (isCalled && !timeoutId && !maxTimeoutId) {\n      args = thisArg = undefined;\n    }\n    return result;\n  }\n  debounced.cancel = cancel;\n  debounced.flush = flush;\n  return debounced;\n}\n\nmodule.exports = debounce;\n\n\n/*****************\n ** WEBPACK FOOTER\n ** /Users/JD/Dropbox/Applications/lib/~/lodash/debounce.js\n ** module id = 5\n ** module chunks = 0\n **/\n//# sourceURL=webpack:////Users/JD/Dropbox/Applications/lib/~/lodash/debounce.js?");
+	var isObject = __webpack_require__(/*! ./isObject */ 6),
+	    now = __webpack_require__(/*! ./now */ 7),
+	    toNumber = __webpack_require__(/*! ./toNumber */ 8);
+
+	/** Used as the `TypeError` message for "Functions" methods. */
+	var FUNC_ERROR_TEXT = 'Expected a function';
+
+	/* Built-in method references for those with the same name as other `lodash` methods. */
+	var nativeMax = Math.max;
+
+	/**
+	 * Creates a debounced function that delays invoking `func` until after `wait`
+	 * milliseconds have elapsed since the last time the debounced function was
+	 * invoked. The debounced function comes with a `cancel` method to cancel
+	 * delayed `func` invocations and a `flush` method to immediately invoke them.
+	 * Provide an options object to indicate whether `func` should be invoked on
+	 * the leading and/or trailing edge of the `wait` timeout. The `func` is invoked
+	 * with the last arguments provided to the debounced function. Subsequent calls
+	 * to the debounced function return the result of the last `func` invocation.
+	 *
+	 * **Note:** If `leading` and `trailing` options are `true`, `func` is invoked
+	 * on the trailing edge of the timeout only if the debounced function is
+	 * invoked more than once during the `wait` timeout.
+	 *
+	 * See [David Corbacho's article](http://drupalmotion.com/article/debounce-and-throttle-visual-explanation)
+	 * for details over the differences between `_.debounce` and `_.throttle`.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Function
+	 * @param {Function} func The function to debounce.
+	 * @param {number} [wait=0] The number of milliseconds to delay.
+	 * @param {Object} [options] The options object.
+	 * @param {boolean} [options.leading=false] Specify invoking on the leading
+	 *  edge of the timeout.
+	 * @param {number} [options.maxWait] The maximum time `func` is allowed to be
+	 *  delayed before it's invoked.
+	 * @param {boolean} [options.trailing=true] Specify invoking on the trailing
+	 *  edge of the timeout.
+	 * @returns {Function} Returns the new debounced function.
+	 * @example
+	 *
+	 * // Avoid costly calculations while the window size is in flux.
+	 * jQuery(window).on('resize', _.debounce(calculateLayout, 150));
+	 *
+	 * // Invoke `sendMail` when clicked, debouncing subsequent calls.
+	 * jQuery(element).on('click', _.debounce(sendMail, 300, {
+	 *   'leading': true,
+	 *   'trailing': false
+	 * }));
+	 *
+	 * // Ensure `batchLog` is invoked once after 1 second of debounced calls.
+	 * var debounced = _.debounce(batchLog, 250, { 'maxWait': 1000 });
+	 * var source = new EventSource('/stream');
+	 * jQuery(source).on('message', debounced);
+	 *
+	 * // Cancel the trailing debounced invocation.
+	 * jQuery(window).on('popstate', debounced.cancel);
+	 */
+	function debounce(func, wait, options) {
+	  var args,
+	      maxTimeoutId,
+	      result,
+	      stamp,
+	      thisArg,
+	      timeoutId,
+	      trailingCall,
+	      lastCalled = 0,
+	      leading = false,
+	      maxWait = false,
+	      trailing = true;
+
+	  if (typeof func != 'function') {
+	    throw new TypeError(FUNC_ERROR_TEXT);
+	  }
+	  wait = toNumber(wait) || 0;
+	  if (isObject(options)) {
+	    leading = !!options.leading;
+	    maxWait = 'maxWait' in options && nativeMax(toNumber(options.maxWait) || 0, wait);
+	    trailing = 'trailing' in options ? !!options.trailing : trailing;
+	  }
+
+	  function cancel() {
+	    if (timeoutId) {
+	      clearTimeout(timeoutId);
+	    }
+	    if (maxTimeoutId) {
+	      clearTimeout(maxTimeoutId);
+	    }
+	    lastCalled = 0;
+	    args = maxTimeoutId = thisArg = timeoutId = trailingCall = undefined;
+	  }
+
+	  function complete(isCalled, id) {
+	    if (id) {
+	      clearTimeout(id);
+	    }
+	    maxTimeoutId = timeoutId = trailingCall = undefined;
+	    if (isCalled) {
+	      lastCalled = now();
+	      result = func.apply(thisArg, args);
+	      if (!timeoutId && !maxTimeoutId) {
+	        args = thisArg = undefined;
+	      }
+	    }
+	  }
+
+	  function delayed() {
+	    var remaining = wait - (now() - stamp);
+	    if (remaining <= 0 || remaining > wait) {
+	      complete(trailingCall, maxTimeoutId);
+	    } else {
+	      timeoutId = setTimeout(delayed, remaining);
+	    }
+	  }
+
+	  function flush() {
+	    if ((timeoutId && trailingCall) || (maxTimeoutId && trailing)) {
+	      result = func.apply(thisArg, args);
+	    }
+	    cancel();
+	    return result;
+	  }
+
+	  function maxDelayed() {
+	    complete(trailing, timeoutId);
+	  }
+
+	  function debounced() {
+	    args = arguments;
+	    stamp = now();
+	    thisArg = this;
+	    trailingCall = trailing && (timeoutId || !leading);
+
+	    if (maxWait === false) {
+	      var leadingCall = leading && !timeoutId;
+	    } else {
+	      if (!lastCalled && !maxTimeoutId && !leading) {
+	        lastCalled = stamp;
+	      }
+	      var remaining = maxWait - (stamp - lastCalled);
+
+	      var isCalled = (remaining <= 0 || remaining > maxWait) &&
+	        (leading || maxTimeoutId);
+
+	      if (isCalled) {
+	        if (maxTimeoutId) {
+	          maxTimeoutId = clearTimeout(maxTimeoutId);
+	        }
+	        lastCalled = stamp;
+	        result = func.apply(thisArg, args);
+	      }
+	      else if (!maxTimeoutId) {
+	        maxTimeoutId = setTimeout(maxDelayed, remaining);
+	      }
+	    }
+	    if (isCalled && timeoutId) {
+	      timeoutId = clearTimeout(timeoutId);
+	    }
+	    else if (!timeoutId && wait !== maxWait) {
+	      timeoutId = setTimeout(delayed, wait);
+	    }
+	    if (leadingCall) {
+	      isCalled = true;
+	      result = func.apply(thisArg, args);
+	    }
+	    if (isCalled && !timeoutId && !maxTimeoutId) {
+	      args = thisArg = undefined;
+	    }
+	    return result;
+	  }
+	  debounced.cancel = cancel;
+	  debounced.flush = flush;
+	  return debounced;
+	}
+
+	module.exports = debounce;
+
 
 /***/ },
 /* 6 */
@@ -111,7 +919,36 @@ return /******/ (function(modules) { // webpackBootstrap
   \***************************************************************/
 /***/ function(module, exports) {
 
-	eval("/**\n * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.\n * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)\n *\n * @static\n * @memberOf _\n * @category Lang\n * @param {*} value The value to check.\n * @returns {boolean} Returns `true` if `value` is an object, else `false`.\n * @example\n *\n * _.isObject({});\n * // => true\n *\n * _.isObject([1, 2, 3]);\n * // => true\n *\n * _.isObject(_.noop);\n * // => true\n *\n * _.isObject(null);\n * // => false\n */\nfunction isObject(value) {\n  var type = typeof value;\n  return !!value && (type == 'object' || type == 'function');\n}\n\nmodule.exports = isObject;\n\n\n/*****************\n ** WEBPACK FOOTER\n ** /Users/JD/Dropbox/Applications/lib/~/lodash/isObject.js\n ** module id = 6\n ** module chunks = 0\n **/\n//# sourceURL=webpack:////Users/JD/Dropbox/Applications/lib/~/lodash/isObject.js?");
+	/**
+	 * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+	 * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+	 * @example
+	 *
+	 * _.isObject({});
+	 * // => true
+	 *
+	 * _.isObject([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObject(_.noop);
+	 * // => true
+	 *
+	 * _.isObject(null);
+	 * // => false
+	 */
+	function isObject(value) {
+	  var type = typeof value;
+	  return !!value && (type == 'object' || type == 'function');
+	}
+
+	module.exports = isObject;
+
 
 /***/ },
 /* 7 */
@@ -120,7 +957,26 @@ return /******/ (function(modules) { // webpackBootstrap
   \**********************************************************/
 /***/ function(module, exports) {
 
-	eval("/**\n * Gets the timestamp of the number of milliseconds that have elapsed since\n * the Unix epoch (1 January 1970 00:00:00 UTC).\n *\n * @static\n * @memberOf _\n * @type {Function}\n * @category Date\n * @returns {number} Returns the timestamp.\n * @example\n *\n * _.defer(function(stamp) {\n *   console.log(_.now() - stamp);\n * }, _.now());\n * // => logs the number of milliseconds it took for the deferred function to be invoked\n */\nvar now = Date.now;\n\nmodule.exports = now;\n\n\n/*****************\n ** WEBPACK FOOTER\n ** /Users/JD/Dropbox/Applications/lib/~/lodash/now.js\n ** module id = 7\n ** module chunks = 0\n **/\n//# sourceURL=webpack:////Users/JD/Dropbox/Applications/lib/~/lodash/now.js?");
+	/**
+	 * Gets the timestamp of the number of milliseconds that have elapsed since
+	 * the Unix epoch (1 January 1970 00:00:00 UTC).
+	 *
+	 * @static
+	 * @memberOf _
+	 * @type {Function}
+	 * @category Date
+	 * @returns {number} Returns the timestamp.
+	 * @example
+	 *
+	 * _.defer(function(stamp) {
+	 *   console.log(_.now() - stamp);
+	 * }, _.now());
+	 * // => logs the number of milliseconds it took for the deferred function to be invoked
+	 */
+	var now = Date.now;
+
+	module.exports = now;
+
 
 /***/ },
 /* 8 */
@@ -129,7 +985,66 @@ return /******/ (function(modules) { // webpackBootstrap
   \***************************************************************/
 /***/ function(module, exports, __webpack_require__) {
 
-	eval("var isFunction = __webpack_require__(/*! ./isFunction */ 9),\n    isObject = __webpack_require__(/*! ./isObject */ 6);\n\n/** Used as references for various `Number` constants. */\nvar NAN = 0 / 0;\n\n/** Used to match leading and trailing whitespace. */\nvar reTrim = /^\\s+|\\s+$/g;\n\n/** Used to detect bad signed hexadecimal string values. */\nvar reIsBadHex = /^[-+]0x[0-9a-f]+$/i;\n\n/** Used to detect binary string values. */\nvar reIsBinary = /^0b[01]+$/i;\n\n/** Used to detect octal string values. */\nvar reIsOctal = /^0o[0-7]+$/i;\n\n/** Built-in method references without a dependency on `root`. */\nvar freeParseInt = parseInt;\n\n/**\n * Converts `value` to a number.\n *\n * @static\n * @memberOf _\n * @category Lang\n * @param {*} value The value to process.\n * @returns {number} Returns the number.\n * @example\n *\n * _.toNumber(3);\n * // => 3\n *\n * _.toNumber(Number.MIN_VALUE);\n * // => 5e-324\n *\n * _.toNumber(Infinity);\n * // => Infinity\n *\n * _.toNumber('3');\n * // => 3\n */\nfunction toNumber(value) {\n  if (isObject(value)) {\n    var other = isFunction(value.valueOf) ? value.valueOf() : value;\n    value = isObject(other) ? (other + '') : other;\n  }\n  if (typeof value != 'string') {\n    return value === 0 ? value : +value;\n  }\n  value = value.replace(reTrim, '');\n  var isBinary = reIsBinary.test(value);\n  return (isBinary || reIsOctal.test(value))\n    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)\n    : (reIsBadHex.test(value) ? NAN : +value);\n}\n\nmodule.exports = toNumber;\n\n\n/*****************\n ** WEBPACK FOOTER\n ** /Users/JD/Dropbox/Applications/lib/~/lodash/toNumber.js\n ** module id = 8\n ** module chunks = 0\n **/\n//# sourceURL=webpack:////Users/JD/Dropbox/Applications/lib/~/lodash/toNumber.js?");
+	var isFunction = __webpack_require__(/*! ./isFunction */ 9),
+	    isObject = __webpack_require__(/*! ./isObject */ 6);
+
+	/** Used as references for various `Number` constants. */
+	var NAN = 0 / 0;
+
+	/** Used to match leading and trailing whitespace. */
+	var reTrim = /^\s+|\s+$/g;
+
+	/** Used to detect bad signed hexadecimal string values. */
+	var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
+
+	/** Used to detect binary string values. */
+	var reIsBinary = /^0b[01]+$/i;
+
+	/** Used to detect octal string values. */
+	var reIsOctal = /^0o[0-7]+$/i;
+
+	/** Built-in method references without a dependency on `root`. */
+	var freeParseInt = parseInt;
+
+	/**
+	 * Converts `value` to a number.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to process.
+	 * @returns {number} Returns the number.
+	 * @example
+	 *
+	 * _.toNumber(3);
+	 * // => 3
+	 *
+	 * _.toNumber(Number.MIN_VALUE);
+	 * // => 5e-324
+	 *
+	 * _.toNumber(Infinity);
+	 * // => Infinity
+	 *
+	 * _.toNumber('3');
+	 * // => 3
+	 */
+	function toNumber(value) {
+	  if (isObject(value)) {
+	    var other = isFunction(value.valueOf) ? value.valueOf() : value;
+	    value = isObject(other) ? (other + '') : other;
+	  }
+	  if (typeof value != 'string') {
+	    return value === 0 ? value : +value;
+	  }
+	  value = value.replace(reTrim, '');
+	  var isBinary = reIsBinary.test(value);
+	  return (isBinary || reIsOctal.test(value))
+	    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
+	    : (reIsBadHex.test(value) ? NAN : +value);
+	}
+
+	module.exports = toNumber;
+
 
 /***/ },
 /* 9 */
@@ -138,7 +1053,47 @@ return /******/ (function(modules) { // webpackBootstrap
   \*****************************************************************/
 /***/ function(module, exports, __webpack_require__) {
 
-	eval("var isObject = __webpack_require__(/*! ./isObject */ 6);\n\n/** `Object#toString` result references. */\nvar funcTag = '[object Function]',\n    genTag = '[object GeneratorFunction]';\n\n/** Used for built-in method references. */\nvar objectProto = Object.prototype;\n\n/**\n * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)\n * of values.\n */\nvar objectToString = objectProto.toString;\n\n/**\n * Checks if `value` is classified as a `Function` object.\n *\n * @static\n * @memberOf _\n * @category Lang\n * @param {*} value The value to check.\n * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.\n * @example\n *\n * _.isFunction(_);\n * // => true\n *\n * _.isFunction(/abc/);\n * // => false\n */\nfunction isFunction(value) {\n  // The use of `Object#toString` avoids issues with the `typeof` operator\n  // in Safari 8 which returns 'object' for typed array constructors, and\n  // PhantomJS 1.9 which returns 'function' for `NodeList` instances.\n  var tag = isObject(value) ? objectToString.call(value) : '';\n  return tag == funcTag || tag == genTag;\n}\n\nmodule.exports = isFunction;\n\n\n/*****************\n ** WEBPACK FOOTER\n ** /Users/JD/Dropbox/Applications/lib/~/lodash/isFunction.js\n ** module id = 9\n ** module chunks = 0\n **/\n//# sourceURL=webpack:////Users/JD/Dropbox/Applications/lib/~/lodash/isFunction.js?");
+	var isObject = __webpack_require__(/*! ./isObject */ 6);
+
+	/** `Object#toString` result references. */
+	var funcTag = '[object Function]',
+	    genTag = '[object GeneratorFunction]';
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/**
+	 * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objectToString = objectProto.toString;
+
+	/**
+	 * Checks if `value` is classified as a `Function` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+	 * @example
+	 *
+	 * _.isFunction(_);
+	 * // => true
+	 *
+	 * _.isFunction(/abc/);
+	 * // => false
+	 */
+	function isFunction(value) {
+	  // The use of `Object#toString` avoids issues with the `typeof` operator
+	  // in Safari 8 which returns 'object' for typed array constructors, and
+	  // PhantomJS 1.9 which returns 'function' for `NodeList` instances.
+	  var tag = isObject(value) ? objectToString.call(value) : '';
+	  return tag == funcTag || tag == genTag;
+	}
+
+	module.exports = isFunction;
+
 
 /***/ },
 /* 10 */
@@ -147,7 +1102,58 @@ return /******/ (function(modules) { // webpackBootstrap
   \********************************************************************************************/
 /***/ function(module, exports, __webpack_require__) {
 
-	eval("(function (global, factory) {\n\t true ? factory(exports) :\n\ttypeof define === 'function' && define.amd ? define(['exports'], factory) :\n\tfactory(global.Ractive.events)\n}(this, function (exports) { 'use strict';\n\n\t// TODO can we just declare the keydowhHandler once? using `this`?\n\tfunction makeKeyDefinition(code) {\n\t\treturn function (node, fire) {\n\t\t\tfunction keydownHandler(event) {\n\t\t\t\tvar which = event.which || event.keyCode;\n\n\t\t\t\tif (which === code) {\n\t\t\t\t\tevent.preventDefault();\n\n\t\t\t\t\tfire({\n\t\t\t\t\t\tnode: node,\n\t\t\t\t\t\toriginal: event\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tnode.addEventListener('keydown', keydownHandler, false);\n\n\t\t\treturn {\n\t\t\t\tteardown: function teardown() {\n\t\t\t\t\tnode.removeEventListener('keydown', keydownHandler, false);\n\t\t\t\t}\n\t\t\t};\n\t\t};\n\t}\n\n\tvar enter = makeKeyDefinition(13);\n\tvar tab = makeKeyDefinition(9);\n\tvar ractive_events_keys__escape = makeKeyDefinition(27);\n\tvar space = makeKeyDefinition(32);\n\n\tvar leftarrow = makeKeyDefinition(37);\n\tvar rightarrow = makeKeyDefinition(39);\n\tvar downarrow = makeKeyDefinition(40);\n\tvar uparrow = makeKeyDefinition(38);\n\n\texports.enter = enter;\n\texports.tab = tab;\n\texports.escape = ractive_events_keys__escape;\n\texports.space = space;\n\texports.leftarrow = leftarrow;\n\texports.rightarrow = rightarrow;\n\texports.downarrow = downarrow;\n\texports.uparrow = uparrow;\n\n}));\n\n/*****************\n ** WEBPACK FOOTER\n ** /Users/JD/Dropbox/Applications/lib/~/ractive-events-keys/dist/ractive-events-keys.js\n ** module id = 10\n ** module chunks = 0\n **/\n//# sourceURL=webpack:////Users/JD/Dropbox/Applications/lib/~/ractive-events-keys/dist/ractive-events-keys.js?");
+	(function (global, factory) {
+		 true ? factory(exports) :
+		typeof define === 'function' && define.amd ? define(['exports'], factory) :
+		factory(global.Ractive.events)
+	}(this, function (exports) { 'use strict';
+
+		// TODO can we just declare the keydowhHandler once? using `this`?
+		function makeKeyDefinition(code) {
+			return function (node, fire) {
+				function keydownHandler(event) {
+					var which = event.which || event.keyCode;
+
+					if (which === code) {
+						event.preventDefault();
+
+						fire({
+							node: node,
+							original: event
+						});
+					}
+				}
+
+				node.addEventListener('keydown', keydownHandler, false);
+
+				return {
+					teardown: function teardown() {
+						node.removeEventListener('keydown', keydownHandler, false);
+					}
+				};
+			};
+		}
+
+		var enter = makeKeyDefinition(13);
+		var tab = makeKeyDefinition(9);
+		var ractive_events_keys__escape = makeKeyDefinition(27);
+		var space = makeKeyDefinition(32);
+
+		var leftarrow = makeKeyDefinition(37);
+		var rightarrow = makeKeyDefinition(39);
+		var downarrow = makeKeyDefinition(40);
+		var uparrow = makeKeyDefinition(38);
+
+		exports.enter = enter;
+		exports.tab = tab;
+		exports.escape = ractive_events_keys__escape;
+		exports.space = space;
+		exports.leftarrow = leftarrow;
+		exports.rightarrow = rightarrow;
+		exports.downarrow = downarrow;
+		exports.uparrow = uparrow;
+
+	}));
 
 /***/ },
 /* 11 */
@@ -156,7 +1162,7 @@ return /******/ (function(modules) { // webpackBootstrap
   \**********************************************/
 /***/ function(module, exports) {
 
-	eval("module.exports={\"v\":3,\"t\":[{\"t\":7,\"e\":\"div\",\"a\":{\"class\":[\"ractive-select \",{\"t\":2,\"r\":\"class\"}],\"style\":[{\"t\":2,\"r\":\"style\"}],\"tabindex\":[{\"t\":2,\"x\":{\"r\":[\"tabindex\"],\"s\":\"_0||0\"}}]},\"v\":{\"click\":{\"m\":\"open\",\"a\":{\"r\":[\"event\"],\"s\":\"[_0]\"}},\"space\":{\"m\":\"toggle\",\"a\":{\"r\":[],\"s\":\"[]\"}}},\"f\":[{\"t\":7,\"e\":\"label\",\"f\":[{\"t\":2,\"x\":{\"r\":[\"label\",\"value\",\"placeholder\"],\"s\":\"_0||_1||_2||\\\"Select...\\\"\"}}]},\" \",{\"t\":7,\"e\":\"div\",\"a\":{\"class\":\"arrows\"}},\" \",{\"t\":7,\"e\":\"select\",\"a\":{\"style\":\"position: fixed; left: -9999px\",\"value\":[{\"t\":2,\"r\":\".value\"}],\"tabindex\":\"-1\"},\"f\":[{\"t\":4,\"f\":[{\"t\":4,\"f\":[{\"t\":4,\"f\":[{\"t\":7,\"e\":\"option\",\"a\":{\"value\":[{\"t\":2,\"r\":\".value\"}]},\"f\":[{\"t\":2,\"r\":\".label\"}]}],\"n\":50,\"r\":\"./value\"},{\"t\":4,\"n\":51,\"f\":[{\"t\":7,\"e\":\"option\",\"f\":[{\"t\":2,\"r\":\".\"}]}],\"r\":\"./value\"}],\"n\":52,\"r\":\"_items\"}],\"n\":50,\"r\":\"items\"},{\"t\":4,\"n\":51,\"f\":[{\"t\":16}],\"r\":\"items\"}]},\" \",{\"t\":7,\"e\":\"ul\",\"a\":{\"class\":[\"dropdown\",{\"t\":4,\"f\":[\" open\"],\"n\":50,\"r\":\"open\"},\" \",{\"t\":2,\"r\":\"class\"}]},\"v\":{\"click\":{\"m\":\"select\",\"a\":{\"r\":[\"event\"],\"s\":\"[_0]\"}}},\"f\":[{\"t\":4,\"f\":[{\"t\":7,\"e\":\"li\",\"a\":{\"value\":[{\"t\":2,\"r\":\".value\"}]},\"m\":[{\"t\":4,\"f\":[\"class='selecting'\"],\"n\":50,\"x\":{\"r\":[\"selecting\",\"@index\"],\"s\":\"_0==_1\"}},{\"t\":4,\"f\":[\"selected\"],\"n\":50,\"r\":\"selected\"}],\"f\":[{\"t\":4,\"f\":[{\"t\":7,\"e\":\"span\",\"a\":{\"class\":\"checkmark\"}}],\"n\":50,\"r\":\"selected\"},{\"t\":2,\"r\":\".label\"}]}],\"n\":52,\"r\":\"_items\"}]}]}]};\n\n/*****************\n ** WEBPACK FOOTER\n ** ./~/ractive-loader!./src/template.html\n ** module id = 11\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./src/template.html?./~/ractive-loader");
+	module.exports={"v":3,"t":[{"t":7,"e":"div","a":{"class":["ractive-select ",{"t":2,"r":"class"}],"style":[{"t":2,"r":"style"}],"tabindex":[{"t":2,"x":{"r":["tabindex"],"s":"_0||0"}}]},"v":{"click":{"m":"open","a":{"r":["event"],"s":"[_0]"}},"space":{"m":"toggle","a":{"r":[],"s":"[]"}}},"f":[{"t":7,"e":"label","f":[{"t":2,"x":{"r":["label","value","placeholder"],"s":"_0||_1||_2||\"Select...\""}}]}," ",{"t":7,"e":"div","a":{"class":"arrows"}}," ",{"t":7,"e":"select","a":{"style":"position: fixed; left: -9999px","value":[{"t":2,"r":".value"}],"tabindex":"-1"},"f":[{"t":4,"f":[{"t":4,"f":[{"t":4,"f":[{"t":7,"e":"option","a":{"value":[{"t":2,"r":".value"}]},"f":[{"t":2,"r":".label"}]}],"n":50,"r":"./value"},{"t":4,"n":51,"f":[{"t":7,"e":"option","f":[{"t":2,"r":"."}]}],"r":"./value"}],"n":52,"r":"_items"}],"n":50,"r":"items"},{"t":4,"n":51,"f":[{"t":16}],"r":"items"}]}," ",{"t":7,"e":"ul","a":{"class":["dropdown",{"t":4,"f":[" open"],"n":50,"r":"open"}," ",{"t":2,"r":"class"}]},"v":{"click":{"m":"select","a":{"r":["event"],"s":"[_0]"}}},"f":[{"t":4,"f":[{"t":7,"e":"li","a":{"value":[{"t":2,"r":".value"}]},"m":[{"t":4,"f":["class='selecting'"],"n":50,"x":{"r":["selecting","@index"],"s":"_0==_1"}},{"t":4,"f":["selected"],"n":50,"r":"selected"}],"f":[{"t":4,"f":[{"t":7,"e":"span","a":{"class":"checkmark"}}],"n":50,"r":"selected"},{"t":2,"r":".label"}]}],"n":52,"r":"_items"}]}]}]};
 
 /***/ },
 /* 12 */
@@ -165,7 +1171,60 @@ return /******/ (function(modules) { // webpackBootstrap
   \**********************************************/
 /***/ function(module, exports) {
 
-	eval("\nvar win = window;\nvar doc = document;\n\nmodule.exports = function(node, instance) {\n\n    node.addEventListener('mouseenter', disableScroll);\n    node.addEventListener('mouseleave', enableScroll);\n\n    var contentHeight;\n\n    function preventDefault(e) {\n\n        e = e || win.event;\n        if( (node.scrollTop <= 1 && e.deltaY < 0) ||\n           (node.scrollTop >= contentHeight && e.deltaY > 0) ) {\n\n            if (e.preventDefault)\n                e.preventDefault();\n            e.returnValue = false;\n            return false;\n        }\n    }\n\n    function disableScroll() {\n        // cache height for perf and avoiding reflow/repaint\n        contentHeight = node.scrollHeight - node.offsetHeight - 1;\n\n        win.addEventListener('DOMMouseScroll', preventDefault, false);\n        win.addEventListener('wheel', preventDefault); // modern standard\n        win.addEventListener('mousewheel', preventDefault); // older browsers, IE\n        doc.addEventListener('mousewheel', preventDefault);\n        win.addEventListener('touchmove', preventDefault); // mobile\n    }\n\n    function enableScroll() {\n\n        win.removeEventListener('DOMMouseScroll', preventDefault, false);\n\n        win.removeEventListener('wheel', preventDefault); // modern standard\n        win.removeEventListener('mousewheel', preventDefault); // older browsers, IE\n        doc.removeEventListener('mousewheel', preventDefault);\n        win.removeEventListener('touchmove', preventDefault); // mobile\n    }\n\n    return {\n        teardown: function() {\n            node.removeEventListener('mouseenter', disableScroll);\n            node.removeEventListener('mouseleave', enableScroll);\n        }\n    }\n\n}\n\n\n/*****************\n ** WEBPACK FOOTER\n ** ./src/decorators/prevent-overscroll.js\n ** module id = 12\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./src/decorators/prevent-overscroll.js?");
+	
+	var win = window;
+	var doc = document;
+
+	module.exports = function(node, instance) {
+
+	    node.addEventListener('mouseenter', disableScroll);
+	    node.addEventListener('mouseleave', enableScroll);
+
+	    var contentHeight;
+
+	    function preventDefault(e) {
+
+	        e = e || win.event;
+	        if( (node.scrollTop <= 1 && e.deltaY < 0) ||
+	           (node.scrollTop >= contentHeight && e.deltaY > 0) ) {
+
+	            if (e.preventDefault)
+	                e.preventDefault();
+	            e.returnValue = false;
+	            return false;
+	        }
+	    }
+
+	    function disableScroll() {
+	        // cache height for perf and avoiding reflow/repaint
+	        contentHeight = node.scrollHeight - node.offsetHeight - 1;
+
+	        win.addEventListener('DOMMouseScroll', preventDefault, false);
+	        win.addEventListener('wheel', preventDefault); // modern standard
+	        win.addEventListener('mousewheel', preventDefault); // older browsers, IE
+	        doc.addEventListener('mousewheel', preventDefault);
+	        win.addEventListener('touchmove', preventDefault); // mobile
+	    }
+
+	    function enableScroll() {
+
+	        win.removeEventListener('DOMMouseScroll', preventDefault, false);
+
+	        win.removeEventListener('wheel', preventDefault); // modern standard
+	        win.removeEventListener('mousewheel', preventDefault); // older browsers, IE
+	        doc.removeEventListener('mousewheel', preventDefault);
+	        win.removeEventListener('touchmove', preventDefault); // mobile
+	    }
+
+	    return {
+	        teardown: function() {
+	            node.removeEventListener('mouseenter', disableScroll);
+	            node.removeEventListener('mouseleave', enableScroll);
+	        }
+	    }
+
+	}
+
 
 /***/ }
 /******/ ])
