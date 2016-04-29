@@ -297,8 +297,10 @@ module.exports = Ractive.extend({
             if (target.nodeName !== 'LI')
                 return;
 
-            var valueAttribute = target.getAttribute('value');
-            var value = valueAttribute || target.textContent;
+            var value = target.getAttribute('value');
+
+            if(typeof value === 'undefined')
+                value = target.textContent;
 
         } else {
 
