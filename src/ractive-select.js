@@ -223,6 +223,12 @@ module.exports = Ractive.extend({
 
         }
 
+        // if the previously selected item is not in the new items,
+        // take the first index as the new value
+        var selected = find(newItems, {value: value}) || find(newItems, {label: value});
+        if(!selected && newItems.length > 0)
+            self.set('value', newItems[0].value || newItems[0].label)
+
         self.set('label', label);
         self.set('_items', newItems);
 
