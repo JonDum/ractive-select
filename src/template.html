@@ -4,9 +4,10 @@
      on-space='toggle()'
      tabindex='{{tabindex || 0}}'>
 
-    <label>{{label || value || placeholder || "Select..."}}</label>
-
+    {{! Arrows are floated right. In FF has to be before the label to be on same line (weird bug) }}
     <div class='arrows'></div>
+
+    <label>{{label || value || placeholder || "Select..."}}</label>
 
     <select style='position: fixed; left: -9999px' value='{{.value}}' tabindex='-1'>
         {{#if items}}
