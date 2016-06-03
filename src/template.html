@@ -9,7 +9,7 @@
 
     <label>{{label || value || placeholder || "Select..."}}</label>
 
-    <select style='position: fixed; left: -9999px' value='{{.value}}' tabindex='-1'>
+    <select style='position: absolute; left: -9999px' value='{{.value}}' tabindex='-1'>
         {{#if items}}
             {{#each _items}}
                 {{#if .value}}
