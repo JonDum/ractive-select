@@ -306,7 +306,7 @@ module.exports = Ractive.extend({
 
             var value = target.getAttribute('value');
 
-            if(typeof value === 'undefined')
+            if(value !== '' && !value)
                 value = target.textContent;
 
         } else {
