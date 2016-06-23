@@ -25,7 +25,7 @@
 
     <ul class='dropdown{{#if open}} open{{/if}} {{class}}' on-click='select(event)'>
         {{#each _items}}
-        <li value='{{.value}}' {{#if .selecting == @index}}class='selecting'{{/if}} {{#if .selected}}selected{{/if}}>
+        <li {{#if .value}}value='{{.value}}'{{/if}} {{#if .selecting == @index}}class='selecting'{{/if}} {{#if .selected}}selected{{/if}}>
             {{#if .selected}}<span class='checkmark'></span>{{/if}}{{.label}}
         </li>
         {{/each}}
