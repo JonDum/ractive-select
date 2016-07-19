@@ -74,16 +74,18 @@ module.exports = Ractive.extend({
         var el = self.find('*');
         var dropdown = self.find('.dropdown');
 
-        self.clickHandler = function(e) {
+        // Close dropdown on any clicks outside of the element or dropdown
+        function clickHandler(e) {
 
-            if(e.target.matches('.ractive-select *') || el.contains(e.target))
+            if(el.contains(e.target) || dropdown.contains(e.target)) {
                 return;
+            }
 
             self.set('open', false);
 
-        };
+        }
 
-        self.keyHandler = function(e) {
+        function keyHandler(e) {
 
             var selecting = self.get('selecting');
             var _items = self.get('_items');
@@ -112,7 +114,8 @@ module.exports = Ractive.extend({
 
         };
 
-        self.scrollHandler = function(e) {
+        // update position on scroll
+        function scrollHandler(e) {
             requestAnimationFrame(function() {
                 updatePosition();
             });
@@ -139,34 +142,30 @@ module.exports = Ractive.extend({
 
             if (open) {
 
-                doc.addEventListener('mousedown', self.clickHandler);
-                doc.addEventListener('keyup', self.keyHandler);
+                doc.addEventListener('mousedown', clickHandler);
+                doc.addEventListener('keydown', keyHandler);
 
-                win.addEventListener('scroll', self.scrollHandler, true);
-                //el.parentNode.addEventListener('scroll', self.scrollHandler, true);
+                win.addEventListener('scroll', scrollHandler);
 
             } else {
 
-                doc.removeEventListener('mousedown', self.clickHandler);
-                doc.removeEventListener('keyup', self.keyHandler);
+                doc.removeEventListener('mousedown', clickHandler);
+                doc.removeEventListener('keydown', keyHandler);
 
-                win.removeEventListener('scroll', self.scrollHandler);
-                //el.parentNode.removeEventListener('scroll', self.scrollHandler);
+                win.removeEventListener('scroll', scrollHandler);
 
                 self.set('selecting', -1);
             }
 
             updatePosition();
 
-        }, {
-            defer: true
-        });
+        }, {init: false, defer: true});
 
         self.observe('value items', function(value) {
 
             self.updateItems();
 
-        }, { defer: true });
+        }, {defer: true});
 
     },
 
