@@ -125,9 +125,6 @@ module.exports = Ractive.extend({
         };
 
         function updatePosition() {
-            if(!el) {
-                el = self.find('*');
-            }
 
             var bounds = el.getBoundingClientRect();
             var open = self.get('open');
