@@ -342,4 +342,7 @@ function isTouchDevice() {
     return ('ontouchstart' in win || 'onmsgesturechange' in win) && screen.width < 1200;
 }
 
+function clamp(n, min, max) {
+  return Math.min(Math.max(n, min), max);
+}
 
