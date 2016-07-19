@@ -14,6 +14,12 @@ A replacement for `<select>` tags that allows full styling and customizability.
 npm install ractive-select --save
 ```
 
+### Features
+
+* Themable
+* Supports native mobile UI
+* Keyboard support (arrow keys, space/enter, jump to item by typing)
+
 ### Usage
 
 Add the select to your Ractive instance:
