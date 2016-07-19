@@ -1,7 +1,10 @@
+
 require('./styles.styl');
 
 var debounce = require('lodash/debounce');
 var find = require('lodash/find');
+var isString = require('lodash/isString');
+var startsWith = require('lodash/startsWith');
 
 var win = window;
 var doc = document;
@@ -85,6 +88,11 @@ module.exports = Ractive.extend({
 
         }
 
+        // handle arrow keys, space/enter for selecting
+        // and "jumping" to an item with a letter press
+        var searchString = '';
+        var clearSearchString = debounce(function() { searchString = '' }, 350);
+
         function keyHandler(e) {
 
             var selecting = self.get('selecting');
@@ -109,9 +117,20 @@ module.exports = Ractive.extend({
             }
             else {
                 var letter = String.fromCharCode(e.keyCode);
-                if(letter) {
-
-
+                if(letter && letter.length > 0) {
+                    searchString += letter.toLowerCase();
+                    for(var i = 0; i < _items.length; i++) {
+                        var item = _items[i];
+                        var test = isString(item) ? item : item.label;
+                        test = test.toLowerCase().replace(/\s/g, '');
+                        if(!test)
+                            continue;
+                        if(startsWith(test, searchString)) {
+                            self.set('selecting', i);
+                            break;
+                        }
+                    }
+                    clearSearchString();
                 }
             }
 
