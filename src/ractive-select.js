@@ -90,6 +90,9 @@ module.exports = Ractive.extend({
             var selecting = self.get('selecting');
             var _items = self.get('_items');
 
+            //stop page scrolling
+            e.preventDefault();
+
             if(e.keyCode == 40) // down arrow
                 selecting++;
             else
