@@ -62,9 +62,3 @@ data: {
 },
 ...
 ```
-
-### TODO
-
-* Keyboard events — Selecting elements via string matching and up/down arrows (PRs welcome)
-
-
