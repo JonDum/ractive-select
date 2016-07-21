@@ -78,7 +78,7 @@ module.exports = Ractive.extend({
         var dropdown = self.find('.dropdown');
 
         // Close dropdown on any clicks outside of the element or dropdown
-        function clickHandler(e) {
+        self.docClickHandler = function(e) {
 
             if(el.contains(e.target) || dropdown.contains(e.target)) {
                 return;
@@ -93,7 +93,7 @@ module.exports = Ractive.extend({
         var searchString = '';
         var clearSearchString = debounce(function() { searchString = '' }, 350);
 
-        function keyHandler(e) {
+        self.keyHandler = function(e) {
 
             var selecting = self.get('selecting');
             var _items = self.get('_items');
@@ -137,7 +137,7 @@ module.exports = Ractive.extend({
         };
 
         // update position on scroll
-        function scrollHandler(e) {
+        self.scrollHandler = function(e) {
             requestAnimationFrame(function() {
                 updatePosition();
             });
@@ -161,17 +161,17 @@ module.exports = Ractive.extend({
 
             if (open) {
 
-                doc.addEventListener('mousedown', clickHandler);
-                doc.addEventListener('keydown', keyHandler);
+                doc.addEventListener('mousedown', self.docClickHandler);
+                doc.addEventListener('keydown', self.keyHandler);
 
-                win.addEventListener('scroll', scrollHandler);
+                win.addEventListener('scroll', self.scrollHandler);
 
             } else {
 
-                doc.removeEventListener('mousedown', clickHandler);
-                doc.removeEventListener('keydown', keyHandler);
+                doc.removeEventListener('mousedown', self.docClickHandler);
+                doc.removeEventListener('keydown', self.keyHandler);
 
-                win.removeEventListener('scroll', scrollHandler);
+                win.removeEventListener('scroll', self.scrollHandler);
 
                 self.set('selecting', -1);
             }
@@ -191,10 +191,15 @@ module.exports = Ractive.extend({
 
     onteardown: function() {
 
-        doc.removeEventListener('click', this.clickHandler);
+        var self = this;
+
+        doc.removeEventListener('mousedown', self.docClickHandler);
+        doc.removeEventListener('keydown', self.keyHandler);
+        win.removeEventListener('scroll', self.scrollHandler);
+
 
         // have to manually clean this up since we hoisted it from under ractive's nose
-        var dropdown = this.find('.dropdown');
+        var dropdown = self.find('.dropdown');
 
         if(dropdown) {
             dropdown.parentNode.removeChild(dropdown);
@@ -206,8 +211,6 @@ module.exports = Ractive.extend({
             container.parentNode.removeChild(container);
         }
 
-        doc.removeEventListener('click', self.clickHandler);
-        doc.removeEventListener('keyup', self.keyHandler);
 
     },
 
