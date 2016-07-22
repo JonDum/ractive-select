@@ -139,23 +139,9 @@ module.exports = Ractive.extend({
         // update position on scroll
         self.scrollHandler = function(e) {
             requestAnimationFrame(function() {
-                updatePosition();
+                self.updatePosition();
             });
         };
-
-        function updatePosition() {
-
-            var bounds = el.getBoundingClientRect();
-            var open = self.get('open');
-
-            if (open) {
-                dropdown.style.left = bounds.left + 'px';
-                dropdown.style.top = (bounds.bottom + 3) + 'px';
-            } else {
-                dropdown.style.left = '-9999px';;
-            }
-
-        }
 
         self.observe('open', function(open) {
 
@@ -180,7 +166,7 @@ module.exports = Ractive.extend({
                 self.set('selecting', -1);
             }
 
-            updatePosition();
+            self.updatePosition();
 
         }, {init: false, defer: true});
 
@@ -277,6 +263,26 @@ module.exports = Ractive.extend({
         el.style.minWidth = dropdown.style.minWidth =
             Math.max(el.offsetWidth, dropdown.offsetWidth) + 'px';
     },
+
+    updatePosition: function() {
+
+        var self = this;
+
+        var el = self.find('*');
+        var dropdown = self.find('.dropdown');
+
+        var bounds = el.getBoundingClientRect();
+        var open = self.get('open');
+
+        if (open) {
+            dropdown.style.left = bounds.left + 'px';
+            dropdown.style.top = (bounds.bottom + 3) + 'px';
+        } else {
+            dropdown.style.left = '-9999px';;
+        }
+
+    },
+
 
     open: function(details) {
 
