@@ -161,12 +161,16 @@ module.exports = Ractive.extend({
 
             if (open) {
 
+				dropdown.classList.add('open');
+
                 doc.addEventListener('mousedown', self.docClickHandler);
                 doc.addEventListener('keydown', self.keyHandler);
 
                 win.addEventListener('scroll', self.scrollHandler);
 
             } else {
+
+				dropdown.classList.remove('open');
 
                 doc.removeEventListener('mousedown', self.docClickHandler);
                 doc.removeEventListener('keydown', self.keyHandler);
