@@ -198,27 +198,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // update position on scroll
 	        self.scrollHandler = function(e) {
 	            requestAnimationFrame(function() {
-	                updatePosition();
+	                self.updatePosition();
 	            });
 	        };
-
-	        function updatePosition() {
-
-	            var bounds = el.getBoundingClientRect();
-	            var open = self.get('open');
-
-	            if (open) {
-	                dropdown.style.left = bounds.left + 'px';
-	                dropdown.style.top = (bounds.bottom + 3) + 'px';
-	            } else {
-	                dropdown.style.left = '-9999px';;
-	            }
-
-	        }
 
 	        self.observe('open', function(open) {
 
 	            if (open) {
+
+					dropdown.classList.add('open');
 
 	                doc.addEventListener('mousedown', self.docClickHandler);
 	                doc.addEventListener('keydown', self.keyHandler);
@@ -226,6 +214,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                win.addEventListener('scroll', self.scrollHandler);
 
 	            } else {
+
+					dropdown.classList.remove('open');
 
 	                doc.removeEventListener('mousedown', self.docClickHandler);
 	                doc.removeEventListener('keydown', self.keyHandler);
@@ -235,7 +225,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                self.set('selecting', -1);
 	            }
 
-	            updatePosition();
+	            self.updatePosition();
 
 	        }, {init: false, defer: true});
 
@@ -332,6 +322,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	        el.style.minWidth = dropdown.style.minWidth =
 	            Math.max(el.offsetWidth, dropdown.offsetWidth) + 'px';
 	    },
+
+	    updatePosition: function() {
+
+	        var self = this;
+
+	        var el = self.find('*');
+	        var dropdown = self.find('.dropdown');
+
+	        var bounds = el.getBoundingClientRect();
+	        var open = self.get('open');
+
+	        if (open) {
+	            dropdown.style.left = bounds.left + 'px';
+	            dropdown.style.top = (bounds.bottom + 3) + 'px';
+	        } else {
+	            dropdown.style.left = '-9999px';;
+	        }
+
+	    },
+
 
 	    open: function(details) {
 
@@ -5116,7 +5126,7 @@ return /******/ (function(modules) { // webpackBootstrap
   \**********************************************/
 /***/ function(module, exports) {
 
-	module.exports={"v":3,"t":[{"t":7,"e":"div","a":{"class":["ractive-select ",{"t":2,"r":"class"}],"style":[{"t":2,"r":"style"}],"tabindex":[{"t":2,"x":{"r":["tabindex"],"s":"_0||0"}}]},"v":{"click":{"m":"toggle","a":{"r":["event"],"s":"[_0]"}},"space":{"m":"toggle","a":{"r":[],"s":"[]"}}},"f":[" ",{"t":7,"e":"div","a":{"class":"arrows"}}," ",{"t":7,"e":"label","f":[{"t":2,"x":{"r":["label","value","placeholder"],"s":"_0||_1||_2||\"Select...\""}}]}," ",{"t":7,"e":"select","a":{"style":"position: absolute; left: -9999px","value":[{"t":2,"r":".value"}],"tabindex":"-1"},"f":[{"t":4,"f":[{"t":4,"f":[{"t":4,"f":[{"t":7,"e":"option","a":{"value":[{"t":2,"r":".value"}]},"f":[{"t":2,"r":".label"}]}],"n":50,"r":".value"},{"t":4,"n":51,"f":[{"t":7,"e":"option","f":[{"t":2,"r":"."}]}],"r":".value"}],"n":52,"r":"_items"}],"n":50,"r":"items"},{"t":4,"n":51,"f":[{"t":16}],"r":"items"}]}," ",{"t":7,"e":"ul","a":{"class":["dropdown",{"t":4,"f":[" open"],"n":50,"r":"open"}," ",{"t":2,"r":"class"}]},"v":{"click":{"m":"select","a":{"r":["event"],"s":"[_0]"}}},"f":[{"t":4,"f":[{"t":7,"e":"li","m":[{"t":4,"f":["value='",{"t":2,"r":".value"},"'"],"n":50,"r":".value"},{"t":4,"f":["class='selecting'"],"n":50,"x":{"r":["~/selecting","@index"],"s":"_0==_1"}},{"t":4,"f":["selected"],"n":50,"r":".selected"}],"f":[{"t":4,"f":[{"t":7,"e":"span","a":{"class":"checkmark"}}],"n":50,"r":".selected"},{"t":2,"r":".label"}]}],"n":52,"r":"_items"}]}]}]};
+	module.exports={"v":3,"t":[{"t":7,"e":"div","a":{"class":["ractive-select ",{"t":2,"r":"class"},{"t":4,"f":[" open"],"n":50,"r":"open"}],"style":[{"t":2,"r":"style"}],"tabindex":[{"t":2,"x":{"r":["tabindex"],"s":"_0||0"}}]},"v":{"click":{"m":"toggle","a":{"r":["event"],"s":"[_0]"}},"space":{"m":"toggle","a":{"r":[],"s":"[]"}}},"f":[" ",{"t":7,"e":"div","a":{"class":"arrows"}}," ",{"t":7,"e":"label","f":[{"t":2,"x":{"r":["label","value","placeholder"],"s":"_0||_1||_2||\"Select...\""}}]}," ",{"t":7,"e":"select","a":{"style":"position: absolute; left: -9999px","value":[{"t":2,"r":".value"}],"tabindex":"-1"},"f":[{"t":4,"f":[{"t":4,"f":[{"t":4,"f":[{"t":7,"e":"option","a":{"value":[{"t":2,"r":".value"}]},"f":[{"t":2,"r":".label"}]}],"n":50,"r":".value"},{"t":4,"n":51,"f":[{"t":7,"e":"option","f":[{"t":2,"r":"."}]}],"r":".value"}],"n":52,"r":"_items"}],"n":50,"r":"items"},{"t":4,"n":51,"f":[{"t":16}],"r":"items"}]}," ",{"t":7,"e":"ul","a":{"class":["dropdown",{"t":4,"f":[" open"],"n":50,"r":"open"}," ",{"t":2,"r":"class"}]},"v":{"click":{"m":"select","a":{"r":["event"],"s":"[_0]"}}},"f":[{"t":4,"f":[{"t":7,"e":"li","m":[{"t":4,"f":["value='",{"t":2,"r":".value"},"'"],"n":50,"r":".value"},{"t":4,"f":["class='selecting'"],"n":50,"x":{"r":["~/selecting","@index"],"s":"_0==_1"}},{"t":4,"f":["selected"],"n":50,"r":".selected"}],"f":[{"t":4,"f":[{"t":7,"e":"span","a":{"class":"checkmark"}}],"n":50,"r":".selected"},{"t":2,"r":".label"}]}],"n":52,"r":"_items"}]}]}]};
 
 /***/ },
 /* 118 */
