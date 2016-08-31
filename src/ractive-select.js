@@ -271,10 +271,10 @@ module.exports = Ractive.extend({
         var el = self.find('*');
         var dropdown = self.find('.dropdown');
 
-        var bounds = el.getBoundingClientRect();
         var open = self.get('open');
 
         if (open) {
+            var bounds = el.getBoundingClientRect();
             dropdown.style.left = bounds.left + 'px';
             dropdown.style.top = (bounds.bottom + 3) + 'px';
         } else {
