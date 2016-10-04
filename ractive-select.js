@@ -120,7 +120,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (!container) {
 	            container = doc.createElement('div');
 	            container.id = id;
-	            container.className = 'ractive-select';
 	            doc.body.appendChild(container);
 	        }
 
@@ -313,6 +312,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var el = this.find('div');
 	        var label = this.find('label');
 
+	        if(!dropdown || !el || !select)
+	            return;
+
 	        var computed = win.getComputedStyle(el);
 	        dropdown.style.fontSize = computed.fontSize;
 
@@ -330,10 +332,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var el = self.find('*');
 	        var dropdown = self.find('.dropdown');
 
-	        var bounds = el.getBoundingClientRect();
+	        if(!dropdown || !el)
+	            return;
+
 	        var open = self.get('open');
 
 	        if (open) {
+	            var bounds = el.getBoundingClientRect();
 	            dropdown.style.left = bounds.left + 'px';
 	            dropdown.style.top = (bounds.bottom + 3) + 'px';
 	        } else {
@@ -477,7 +482,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	// module
-	exports.push([module.id, ".ractive-select {\n  display: inline-block;\n  position: relative;\n  cursor: default;\n  user-select: none;\n  padding: 0 0.3em;\n  overflow: hidden;\n  vertical-align: sub;\n  white-space: nowrap;\n}\n.ractive-select,\n.ractive-select *,\n.ractive-select *:before,\n.ractive-select *:after {\n  box-sizing: border-box;\n}\n.ractive-select label {\n  vertical-align: middle;\n  display: inline-block;\n  user-select: none;\n  -webkit-user-select: none;\n  -moz-user-select: none;\n}\n.ractive-select .arrows {\n  display: inline-block;\n  vertical-align: middle;\n  float: right;\n  margin-left: 0.5em;\n}\n.ractive-select .arrows:before,\n.ractive-select .arrows:after {\n  content: '';\n  display: block;\n  border: 0.25em solid transparent;\n}\n.ractive-select .arrows:before {\n  border-bottom-color: currentColor;\n  margin-bottom: 5px;\n}\n.ractive-select .arrows:after {\n  border-top-color: currentColor;\n}\n.ractive-select .dropdown {\n  margin: 2px 0 0 0;\n  background: #fff;\n  color: #333;\n  box-shadow: 0 3px 9px rgba(0,0,0,0.4);\n  border-radius: 3px;\n  padding: 2px 0;\n  cursor: default;\n  list-style: none;\n  z-index: 50;\n  max-height: 400px;\n  overflow-y: auto;\n}\n.ractive-select li {\n  padding: 0.3em 0.5em 0.3em 1.5em;\n  border-top: 1px solid transparent;\n  border-bottom: 1px solid transparent;\n  white-space: nowrap;\n}\n.ractive-select li[selected] {\n  padding: 0.3em 0.5em;\n}\n.ractive-select li .checkmark {\n  margin-right: 0.2em;\n}\n.ractive-select li .checkmark:before {\n  content: '\\2713';\n}\n.ractive-select li:hover,\n.ractive-select li.selecting {\n  background: linear-gradient(#3d96f5, #0d7cf2);\n  color: #fff;\n  border-top-color: #0a63c2;\n  border-bottom-color: #004a99;\n}\n#ractive-select-dropdown-container {\n  position: absolute;\n  left: -9999px;\n}\n#ractive-select-dropdown-container .dropdown {\n  position: fixed;\n  left: -9999px;\n  z-index: 500;\n}\n", ""]);
+	exports.push([module.id, ".ractive-select {\n  display: inline-block;\n  position: relative;\n  cursor: default;\n  user-select: none;\n  padding: 0 0.3em;\n  overflow: hidden;\n  vertical-align: sub;\n  white-space: nowrap;\n}\n.ractive-select,\n.ractive-select *,\n.ractive-select *:before,\n.ractive-select *:after {\n  box-sizing: border-box;\n}\n.ractive-select label {\n  vertical-align: middle;\n  display: inline-block;\n  user-select: none;\n  -webkit-user-select: none;\n  -moz-user-select: none;\n}\n.ractive-select .arrows {\n  display: inline-block;\n  vertical-align: middle;\n  float: right;\n  margin-left: 0.5em;\n}\n.ractive-select .arrows:before,\n.ractive-select .arrows:after {\n  content: '';\n  display: block;\n  border: 0.25em solid transparent;\n}\n.ractive-select .arrows:before {\n  border-bottom-color: currentColor;\n  margin-bottom: 5px;\n}\n.ractive-select .arrows:after {\n  border-top-color: currentColor;\n}\n#ractive-select-dropdown-container {\n  position: absolute;\n  left: -9999px;\n}\n#ractive-select-dropdown-container .dropdown {\n  position: fixed;\n  left: -9999px;\n  z-index: 500;\n}\n#ractive-select-dropdown-container .dropdown {\n  margin: 2px 0 0 0;\n  background: #fff;\n  color: #333;\n  box-shadow: 0 3px 9px rgba(0,0,0,0.2);\n  border-radius: 3px;\n  padding: 2px 0;\n  cursor: default;\n  list-style: none;\n  z-index: 50;\n  max-height: 400px;\n  overflow-y: auto;\n}\n#ractive-select-dropdown-container li {\n  padding: 0.3em 0.5em 0.3em 1.5em;\n  border-top: 1px solid transparent;\n  border-bottom: 1px solid transparent;\n  white-space: nowrap;\n}\n#ractive-select-dropdown-container li[selected] {\n  padding: 0.3em 0.5em;\n}\n#ractive-select-dropdown-container li .checkmark {\n  margin-right: 0.2em;\n}\n#ractive-select-dropdown-container li .checkmark:before {\n  content: '\\2713';\n}\n#ractive-select-dropdown-container li:hover,\n#ractive-select-dropdown-container li.selecting {\n  background: linear-gradient(#3d96f5, #0d7cf2);\n  color: #fff;\n  border-top-color: #0a63c2;\n  border-bottom-color: #004a99;\n}\n", ""]);
 
 	// exports
 
