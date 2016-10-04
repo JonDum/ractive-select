@@ -254,6 +254,9 @@ module.exports = Ractive.extend({
         var el = this.find('div');
         var label = this.find('label');
 
+        if(!dropdown || !el || !select)
+            return;
+
         var computed = win.getComputedStyle(el);
         dropdown.style.fontSize = computed.fontSize;
 
@@ -270,6 +273,9 @@ module.exports = Ractive.extend({
 
         var el = self.find('*');
         var dropdown = self.find('.dropdown');
+
+        if(!dropdown || !el)
+            return;
 
         var open = self.get('open');
 
