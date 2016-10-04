@@ -61,7 +61,6 @@ module.exports = Ractive.extend({
         if (!container) {
             container = doc.createElement('div');
             container.id = id;
-            container.className = 'ractive-select';
             doc.body.appendChild(container);
         }
 
