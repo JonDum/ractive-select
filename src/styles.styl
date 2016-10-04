@@ -37,13 +37,25 @@
         &:after
             border-top-color currentColor
 
+
+
+
+#ractive-select-dropdown-container
+    position absolute
+    left -9999px
+
+    .dropdown
+        position fixed
+        left -9999px
+        z-index 500
+
     .dropdown
 
         margin 2px 0 0 0 // for user-agent ul styles
 
         background #fff
         color #333
-        box-shadow 0 3px 9px rgba(0, 0, 0, 0.4)
+        box-shadow 0 3px 9px rgba(0, 0, 0, 0.2)
 
         border-radius 3px
         padding (@border-radius - 1px) 0
@@ -78,13 +90,3 @@
             color #fff
             border-top-color #0A63C2
             border-bottom-color #004A99
-
-
-
-#ractive-select-dropdown-container
-    position absolute
-    left -9999px
-    .dropdown
-        position fixed
-        left -9999px
-        z-index 500
