@@ -1,6 +1,6 @@
 {
   "name": "ractive-select",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "A `<select>` replacement for ractive",
   "main": "src/ractive-select.js",
   "repository": "https://github.com/jondum/ractive-select",
